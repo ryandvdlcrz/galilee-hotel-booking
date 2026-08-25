@@ -53,7 +53,11 @@ export default function BookingCheckoutPage() {
   const { checkIn, checkOut, adults, children } = bookingDetails
   const nights = nightsBetween(checkIn, checkOut)
   const subtotal = room ? Number(room.price_per_night) * nights : 0
-  const displayTotal = subtotal + RESORT_FEE_DISPLAY
+  const includedGuests = room ? room.capacity : 0
+  const totalGuestCount = adults + children
+  const extraGuests = Math.max(totalGuestCount - includedGuests, 0)
+  const extraGuestFee = room ? extraGuests * Number(room.extra_pax_fee) * nights : 0
+  const displayTotal = subtotal + extraGuestFee + RESORT_FEE_DISPLAY
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -235,6 +239,14 @@ export default function BookingCheckoutPage() {
                     <span>₱{Number(room.price_per_night).toLocaleString()} × {nights} nights</span>
                     <span>₱{subtotal.toLocaleString()}</span>
                   </div>
+                  {extraGuests > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>
+                        {extraGuests} extra guest{extraGuests > 1 ? 's' : ''} × ₱{Number(room.extra_pax_fee).toLocaleString()} × {nights} nights
+                      </span>
+                      <span>₱{extraGuestFee.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-600">
                     <span>Resort Fees &amp; Taxes</span>
                     <span>₱{RESORT_FEE_DISPLAY.toLocaleString()}</span>

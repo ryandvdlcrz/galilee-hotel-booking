@@ -10,6 +10,7 @@ import BookingCheckoutPage from './pages/BookingCheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
 import MyReservationsPage from './pages/MyReservationsPage'
 import OffersPage from './pages/OffersPage'
+import ContactPage from './pages/ContactPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/booking/confirmation" element={<BookingConfirmationPage />} />
         <Route path="/my-reservations" element={<MyReservationsPage />} />
         <Route path="/offers" element={<OffersPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>

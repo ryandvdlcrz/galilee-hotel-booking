@@ -57,7 +57,17 @@ class RoomType(models.Model):
     description = models.TextField(blank=True)
     price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
     capacity = models.PositiveIntegerField(
-        help_text="Maximum number of guests per room of this type."
+        help_text="Maximum guests included in the base price, per room of this type. "
+                   "Extra guests beyond this are billed at 'extra_pax_fee' each, per night."
+    )
+    extra_pax_fee = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0,
+        help_text="Charge per additional guest, per night, beyond the base capacity. "
+                   "Leave as 0 if this room type doesn't allow extra guests for a fee."
+    )
+    bed_configuration = models.CharField(
+        max_length=150, blank=True,
+        help_text="e.g. '1 Queen Bed, 2 Single Beds' — shown to customers on the room detail page.",
     )
     total_rooms = models.PositiveIntegerField(
         help_text="Total number of rooms of this type available at the hotel."
@@ -224,9 +234,24 @@ class Reservation(models.Model):
     def _generate_code(self):
         return uuid.uuid4().hex[:8].upper()
 
-    def _calculate_total_price(self):
+    def base_room_cost(self):
+        """Room rate only, before any extra-guest fees."""
         nights = (self.check_out_date - self.check_in_date).days
         return (self.room_type.price_per_night * self.num_rooms * nights).quantize(Decimal("0.01"))
+
+    def extra_guest_count(self):
+        """How many guests exceed the room type's included base capacity."""
+        included = self.room_type.capacity * self.num_rooms
+        return max(self.num_guests - included, 0)
+
+    def extra_guest_fee_total(self):
+        """Extra-guest charge: per additional guest, per night."""
+        nights = (self.check_out_date - self.check_in_date).days
+        extra_guests = self.extra_guest_count()
+        return (self.room_type.extra_pax_fee * extra_guests * nights).quantize(Decimal("0.01"))
+
+    def _calculate_total_price(self):
+        return self.base_room_cost() + self.extra_guest_fee_total()
 
     def save(self, *args, **kwargs):
         if not self.reservation_code:

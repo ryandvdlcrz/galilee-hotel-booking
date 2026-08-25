@@ -36,6 +36,8 @@ class RoomTypeSerializer(serializers.ModelSerializer):
             "description",
             "price_per_night",
             "capacity",
+            "extra_pax_fee",
+            "bed_configuration",
             "total_rooms",
             "size_sqm",
             "amenities",
@@ -65,6 +67,9 @@ class ReservationSerializer(serializers.ModelSerializer):
     the client."""
 
     room_type_name = serializers.CharField(source="room_type.name", read_only=True)
+    base_room_cost = serializers.SerializerMethodField()
+    extra_guest_count = serializers.SerializerMethodField()
+    extra_guest_fee_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Reservation
@@ -82,10 +87,22 @@ class ReservationSerializer(serializers.ModelSerializer):
             "check_out_date",
             "status",
             "total_price",
+            "base_room_cost",
+            "extra_guest_count",
+            "extra_guest_fee_total",
             "special_requests",
             "created_at",
         ]
         read_only_fields = ["reservation_code", "status", "total_price", "created_at"]
+
+    def get_base_room_cost(self, obj):
+        return obj.base_room_cost()
+
+    def get_extra_guest_count(self, obj):
+        return obj.extra_guest_count()
+
+    def get_extra_guest_fee_total(self, obj):
+        return obj.extra_guest_fee_total()
 
     def validate(self, attrs):
         # Reuses the same validation logic defined on the model (date order +

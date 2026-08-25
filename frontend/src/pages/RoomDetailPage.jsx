@@ -59,7 +59,12 @@ export default function RoomDetailPage() {
   }, [slug])
 
   const nights = nightsBetween(checkIn, checkOut)
-  const total = room ? nights * Number(room.price_per_night) : 0
+  const totalGuests = adults + children
+  const includedGuests = room ? room.capacity : 0
+  const extraGuests = Math.max(totalGuests - includedGuests, 0)
+  const baseRoomCost = room ? nights * Number(room.price_per_night) : 0
+  const extraGuestFee = room ? extraGuests * Number(room.extra_pax_fee) * nights : 0
+  const total = baseRoomCost + extraGuestFee
 
   function nextImage() {
     if (!room?.images?.length) return
@@ -185,8 +190,14 @@ export default function RoomDetailPage() {
                   <Info className="h-4 w-4" /> Guest Capacity
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Maximum of {room.capacity} guests per room. Contact us for cribs or extra bedding.
+                  Includes up to {room.capacity} guest{room.capacity !== 1 ? 's' : ''}.
+                  {Number(room.extra_pax_fee) > 0 && (
+                    <> Additional guests are ₱{Number(room.extra_pax_fee).toLocaleString()} per person, per night.</>
+                  )}
                 </p>
+                {room.bed_configuration && (
+                  <p className="mt-1 text-sm text-gray-600">{room.bed_configuration}</p>
+                )}
               </div>
               <div>
                 <p className="flex items-center gap-1.5 text-sm font-medium text-[#16264c]">
@@ -244,7 +255,7 @@ export default function RoomDetailPage() {
                       onChange={(e) => setAdults(Number(e.target.value))}
                       className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
                     >
-                      {[1, 2, 3, 4, 5, 6].map((n) => (
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>{n} Adult{n > 1 ? 's' : ''}</option>
                       ))}
                     </select>
@@ -264,8 +275,16 @@ export default function RoomDetailPage() {
                   <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
                     <div className="flex justify-between text-gray-600">
                       <span>₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}</span>
-                      <span>₱{total.toLocaleString()}</span>
+                      <span>₱{baseRoomCost.toLocaleString()}</span>
                     </div>
+                    {extraGuests > 0 && (
+                      <div className="flex justify-between text-gray-600">
+                        <span>
+                          {extraGuests} extra guest{extraGuests > 1 ? 's' : ''} × ₱{Number(room.extra_pax_fee).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
+                        </span>
+                        <span>₱{extraGuestFee.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between pt-1 text-base font-bold text-[#16264c]">
                       <span>Total</span>
                       <span>₱{total.toLocaleString()}</span>

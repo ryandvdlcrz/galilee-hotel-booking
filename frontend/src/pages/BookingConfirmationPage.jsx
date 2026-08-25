@@ -36,8 +36,10 @@ export default function BookingConfirmationPage() {
   }
 
   const nights = nightsBetween(reservation.check_in_date, reservation.check_out_date)
-  const roomRate = Number(reservation.total_price)
-  const totalDisplay = roomRate + RESORT_FEE_DISPLAY
+  const baseRoomCost = Number(reservation.base_room_cost ?? reservation.total_price)
+  const extraGuestCount = reservation.extra_guest_count ?? 0
+  const extraGuestFee = Number(reservation.extra_guest_fee_total ?? 0)
+  const totalDisplay = Number(reservation.total_price) + RESORT_FEE_DISPLAY
   const statusInfo = STATUS_STYLES[reservation.status] || STATUS_STYLES.pending
   const primaryImage = room?.images?.find((img) => img.is_primary) ?? room?.images?.[0]
 
@@ -138,8 +140,14 @@ export default function BookingConfirmationPage() {
                   </p>
                   <div className="flex justify-between text-gray-600">
                     <span>Room rate ({nights} nights)</span>
-                    <span>₱{roomRate.toLocaleString()}</span>
+                    <span>₱{baseRoomCost.toLocaleString()}</span>
                   </div>
+                  {extraGuestCount > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>{extraGuestCount} extra guest{extraGuestCount > 1 ? 's' : ''} ({nights} nights)</span>
+                      <span>₱{extraGuestFee.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-600">
                     <span>Taxes &amp; Service Fees</span>
                     <span>₱{RESORT_FEE_DISPLAY.toLocaleString()}</span>
