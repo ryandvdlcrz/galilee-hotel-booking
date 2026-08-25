@@ -11,6 +11,7 @@ import BookingConfirmationPage from './pages/BookingConfirmationPage'
 import MyReservationsPage from './pages/MyReservationsPage'
 import OffersPage from './pages/OffersPage'
 import ContactPage from './pages/ContactPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Footer />
     </>
