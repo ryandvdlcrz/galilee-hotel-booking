@@ -4,8 +4,6 @@ import { Wifi, Snowflake, Tv, Info, Clock, ChevronLeft, ChevronRight, Sparkles }
 import { getRoomTypeBySlug, getRoomTypes } from '../api/rooms'
 import { nightsBetween } from '../utils/formatDate'
 
-// Maps an Amenity's `icon` field (set in Django Admin) to a Lucide icon.
-// Falls back to a generic sparkle icon for anything not listed here.
 const AMENITY_ICONS = {
   wifi: Wifi,
   aircon: Snowflake,
@@ -13,8 +11,6 @@ const AMENITY_ICONS = {
   tv: Tv,
 }
 
-// Hotel-wide policy — same for every room, so it's a constant rather than
-// per-room data. Edit here if the policy ever changes.
 const CHECK_IN_OUT_POLICY = 'Check-in from 3:00 PM. Check-out by 11:00 AM. Late check-out subject to availability.'
 
 export default function RoomDetailPage() {
@@ -84,8 +80,6 @@ export default function RoomDetailPage() {
       return
     }
 
-    // Guest contact details + final confirmation happen on the checkout page.
-    // We hand off the selected room/dates/guests via route state.
     navigate('/booking/checkout', {
       state: {
         roomId: room.id,
@@ -117,43 +111,50 @@ export default function RoomDetailPage() {
 
   return (
     <div className="bg-[#faf7f0]">
-      {/* --- Hero image with room name --- */}
-      <section className="relative h-[420px] w-full overflow-hidden bg-gray-200">
-        {images[activeImage] ? (
-          <img
-            src={images[activeImage].image}
-            alt={room.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-gray-400">No image yet</div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-        <h1 className="absolute bottom-8 left-6 text-4xl font-bold text-white sm:left-10">
-          {room.name}
-        </h1>
+      {/* Dynamic image viewer container that scales to image natural proportions */}
+      <section className="relative w-full bg-gray-950">
+        <div className="mx-auto max-w-6xl">
+          {images[activeImage] ? (
+            <img
+              src={images[activeImage].image}
+              alt={room.name}
+              className="h-auto w-full max-h-[80vh] object-contain mx-auto block"
+            />
+          ) : (
+            <div className="flex h-64 items-center justify-center text-gray-400">No image yet</div>
+          )}
+        </div>
 
-        {images.length > 1 && (
-          <div className="absolute bottom-8 right-6 flex gap-2 sm:right-10">
-            <button
-              onClick={prevImage}
-              aria-label="Previous photo"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 hover:bg-white"
-            >
-              <ChevronLeft className="h-5 w-5 text-[#16264c]" />
-            </button>
-            <button
-              onClick={nextImage}
-              aria-label="Next photo"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 hover:bg-white"
-            >
-              <ChevronRight className="h-5 w-5 text-[#16264c]" />
-            </button>
+        {/* Floating overlays for title and controls */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 sm:p-8">
+          <div className="mx-auto max-w-6xl flex items-end justify-between">
+            <h1 className="text-3xl font-bold text-white sm:text-4xl">
+              {room.name}
+            </h1>
+
+            {images.length > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={prevImage}
+                  aria-label="Previous photo"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white"
+                >
+                  <ChevronLeft className="h-5 w-5 text-[#16264c]" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  aria-label="Next photo"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white"
+                >
+                  <ChevronRight className="h-5 w-5 text-[#16264c]" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
 
-      {/* --- Details + booking widget --- */}
+      {/* Details + booking widget */}
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           {/* Left: details */}
@@ -307,7 +308,7 @@ export default function RoomDetailPage() {
         </div>
       </section>
 
-      {/* --- Discover more rooms --- */}
+      {/* Discover more rooms */}
       {otherRooms.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 pb-16">
           <h2 className="text-2xl font-bold text-[#16264c]">Discover More Wonders</h2>
@@ -324,7 +325,11 @@ export default function RoomDetailPage() {
                 >
                   <div className="aspect-[16/9] bg-gray-100">
                     {img ? (
-                      <img src={img.image} alt={r.name} className="h-full w-full object-cover" />
+                      <img
+                        src={img.image}
+                        alt={r.name}
+                        className="h-full w-full object-cover object-center"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-gray-400">
                         No image yet
