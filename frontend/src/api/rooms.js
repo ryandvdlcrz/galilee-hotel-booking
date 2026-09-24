@@ -11,7 +11,9 @@ export async function getRoomTypes({ checkIn, checkOut } = {}) {
   return data
 }
 
-export async function getRoomTypeBySlug(slug) {
-  const { data } = await client.get(`/room-types/${slug}/`)
+export async function getRoomTypeBySlug(slug, { checkIn, checkOut } = {}) {
+  const { data } = await client.get(`/room-types/${slug}/`, {
+    params: { check_in: checkIn, check_out: checkOut },
+  })
   return data
 }

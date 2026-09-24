@@ -28,6 +28,8 @@ export default function RoomDetailPage() {
   const [adults, setAdults] = useState(2)
   const [children, setChildren] = useState(0)
   const [error, setError] = useState('')
+  const [selectedRoomIds, setSelectedRoomIds] = useState([])
+  const [availableRoomNumbers, setAvailableRoomNumbers] = useState([])
 
   useEffect(() => {
     let isMounted = true
@@ -54,6 +56,20 @@ export default function RoomDetailPage() {
     return () => { isMounted = false }
   }, [slug])
 
+  useEffect(() => {
+    if (!checkIn || !checkOut) {
+      setAvailableRoomNumbers([])
+      setSelectedRoomIds([])
+      return
+    }
+    getRoomTypeBySlug(slug, { checkIn, checkOut})
+      .then((data) => {
+        setAvailableRoomNumbers(data.available_room_numbers || [])
+        setSelectedRoomIds([])
+      })
+      .catch(() => {})
+  }, [slug, checkIn, checkOut])
+
   const nights = nightsBetween(checkIn, checkOut)
   const totalGuests = adults + children
   const includedGuests = room ? room.capacity : 0
@@ -71,12 +87,17 @@ export default function RoomDetailPage() {
     setActiveImage((i) => (i - 1 + room.images.length) % room.images.length)
   }
 
-  async function handleReserve(e) {
+   async function handleReserve(e) {
     e.preventDefault()
     setError('')
 
     if (!checkIn || !checkOut) {
       setError('Please select your check-in and check-out dates.')
+      return
+    }
+
+    if (selectedRoomIds.length === 0) {
+      setError('Please select at least one room number.')
       return
     }
 
@@ -88,6 +109,7 @@ export default function RoomDetailPage() {
         checkOut,
         adults,
         children,
+        roomIds: selectedRoomIds,
       },
     })
   }
@@ -271,7 +293,40 @@ export default function RoomDetailPage() {
                     </select>
                   </div>
                 </label>
-
+                                      {checkIn && checkOut && (
+                  <div>
+                    <span className="mb-1 block text-xs font-semibold text-[#16264c]">
+                      Select Room Number{room.capacity > 1 ? '(s)' : ''}
+                    </span>
+                    {availableRoomNumbers.length === 0 ? (
+                      <p className="text-xs text-red-600">No rooms available for these dates.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {availableRoomNumbers.map((r) => {
+                          const isSelected = selectedRoomIds.includes(r.id)
+                          return (
+                            <button
+                              key={r.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedRoomIds((prev) =>
+                                  isSelected ? prev.filter((id) => id !== r.id) : [...prev, r.id]
+                                )
+                              }}
+                              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                                isSelected
+                                  ? 'border-[#a6842f] bg-[#a6842f] text-white'
+                                  : 'border-gray-200 text-[#16264c] hover:border-[#a6842f]'
+                              }`}
+                            >
+                              Room {r.room_number}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {nights > 0 && (
                   <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
                     <div className="flex justify-between text-gray-600">

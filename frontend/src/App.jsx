@@ -14,6 +14,7 @@ import ContactPage from './pages/ContactPage'
 import NotFoundPage from './pages/NotFoundPage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
+import FindReservationPage from './pages/FindReservationPage'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/booking/checkout" element={<BookingCheckoutPage />} />
         <Route path="/booking/confirmation" element={<BookingConfirmationPage />} />
         <Route path="/my-reservations" element={<MyReservationsPage />} />
+        <Route path="/find-reservation" element={<FindReservationPage />} />
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />

@@ -111,6 +111,58 @@ class RoomType(models.Model):
         booked = self.rooms_booked_for_range(check_in, check_out, exclude_reservation_id)
         return max(self.total_rooms - booked, 0)
 
+    def available_rooms_list(self, check_in, check_out, exclude_reservation_id=None):
+        """Return the queryset of specific Room instances of this type
+        that are free for the given date range."""
+        booked_room_ids = Reservation.objects.filter(
+            room_type=self,
+            status__in=[
+                Reservation.Status.PENDING,
+                Reservation.Status.CONFIRMED,
+                Reservation.Status.CHECKED_IN,
+            ],
+            check_in_date__lt=check_out,
+            check_out_date__gt=check_in,
+        )
+        if exclude_reservation_id:
+            booked_room_ids = booked_room_ids.exclude(pk=exclude_reservation_id)
+
+        booked_room_ids = booked_room_ids.values_list("rooms__id", flat=True)
+
+        return self.rooms.filter(is_active=True).exclude(id__in=booked_room_ids)
+
+class Room(models.Model):
+    """An individual physical room belonging to a RoomType.
+    Used to assign specific room numbers to reservations."""
+
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name="rooms")
+    room_number = models.CharField(max_length=20)
+    is_active = models.BooleanField(
+        default=True, help_text="Uncheck to remove this room from booking without deleting its history."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["room_type", "room_number"]
+        unique_together = ["room_type", "room_number"]
+
+    def __str__(self):
+        return f"{self.room_type.name} — Room {self.room_number}"
+
+    def is_available_for_range(self, check_in, check_out, exclude_reservation_id=None):
+        """Check if this specific room is free for the given date range."""
+        overlapping = self.reservations.filter(
+            status__in=[
+                Reservation.Status.PENDING,
+                Reservation.Status.CONFIRMED,
+                Reservation.Status.CHECKED_IN,
+            ],
+            check_in_date__lt=check_out,
+            check_out_date__gt=check_in,
+        )
+        if exclude_reservation_id:
+            overlapping = overlapping.exclude(pk=exclude_reservation_id)
+        return not overlapping.exists()
 
 class RoomImage(models.Model):
     """Gallery images for a room type (customer-facing room details page)."""
@@ -193,6 +245,10 @@ class Reservation(models.Model):
 
     room_type = models.ForeignKey(RoomType, on_delete=models.PROTECT, related_name="reservations")
     num_rooms = models.PositiveIntegerField(default=1)
+    rooms = models.ManyToManyField(
+        Room, blank=True, related_name="reservations",
+        help_text="Specific room(s) assigned to this reservation, matching num_rooms in count"
+    )
     num_guests = models.PositiveIntegerField(default=1)
 
     check_in_date = models.DateField()
@@ -215,11 +271,13 @@ class Reservation(models.Model):
     def __str__(self):
         return f"{self.reservation_code} — {self.guest_name} ({self.room_type})"
 
-    def clean(self):
+    def clean_dates_and_quantity(self):
+        """Checks that don't require a saved isntance (no M2M queries).
+        Safe to call before the reservation has a pk."""
         errors = {}
         if self.check_in_date and self.check_out_date:
             if self.check_out_date <= self.check_in_date:
-                errors["check_out_date"] = "Check-out date must be after check-in date."
+                errors["check_out_date"] = "Check-out date must be after check in date."
         if self.room_type_id and self.check_in_date and self.check_out_date and self.num_rooms:
             available = self.room_type.available_rooms_for_range(
                 self.check_in_date, self.check_out_date, exclude_reservation_id=self.pk
@@ -231,6 +289,30 @@ class Reservation(models.Model):
         if errors:
             raise ValidationError(errors)
 
+    def clean_rooms(self):
+         """Checks that require a saved instance, since self.rooms is M2M.
+         Only call this after the reservation has a pk."""
+         errors = {}
+         if self.pk and self.check_in_date and self.check_out_date:
+             selected_rooms = self.rooms.all()
+             if selected_rooms.count() != self.num_rooms:
+                 errors["rooms"] = (
+                     f"You selected {selected_rooms.count()} room(s) but num_rooms is {self.num_rooms}. "
+                     "These must match."
+                 )
+             for room in selected_rooms:
+                 if room.room_type_id != self.room_type_id:
+                     errors["rooms"] = f"Room {room.room_number} does not belong to the selected room type."
+                 elif not room.is_available_for_range(self.check_in_date, self.check_out_date, exclude_reservation_id=self.pk):
+                     errors.setdefault("rooms", f"Room {room.room_number} is no longer available for these dates.")
+         if errors:
+          raise ValidationError(errors)
+
+    def clean(self):
+        """Full verification - called by Django Admin (ModelForm) after save."""
+        self.clean_dates_and_quantity()
+        self.clean_rooms()
+                
     def _generate_code(self):
         return uuid.uuid4().hex[:8].upper()
 

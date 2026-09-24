@@ -23,7 +23,7 @@ urlpatterns = [
     # Reservations
     path("reservations/", ReservationCreateView.as_view(), name="reservation-create"),
     path("reservations/my/", MyReservationsView.as_view(), name="reservation-my"),
-    path("reservations/lookup/<str:code>/", ReservationLookupView.as_view(), name="reservation-lookup"),
+    path("reservations/lookup/", ReservationLookupView.as_view(), name="reservation-lookup"),
     path("reservations/<int:pk>/cancel/", CancelReservationView.as_view(), name="reservation-cancel"),
 
     # Auth

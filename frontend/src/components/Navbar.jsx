@@ -19,7 +19,7 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
         <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
           <img src={galileeLogo} alt="Galilee Wonderland" className="h-8 w-8 rounded-full" />
-          <span className="text-base font-bold text-[#16264c] sm:text-lg">Galilee Mansion</span>
+          <span className="text-base font-bold text-[#16264c] sm:text-lg">Galilee Wonderland</span>
         </Link>
 
         {/* Desktop nav links */}
@@ -42,9 +42,14 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link to="/login" className="text-sm font-semibold text-[#16264c]">
-              Login
-            </Link>
+            <>
+              <Link to="/find-reservation" className="text-sm font-medium text-[#16264c]">
+                Manage Booking
+              </Link>
+              <Link to="/login" className="text-sm font-semibold text-[#16264c]">
+                Login
+              </Link>
+            </>
           )}
           <Link
             to="/rooms"
@@ -85,7 +90,10 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link to="/login" onClick={closeMenu}>Login</Link>
+              <>
+                <Link to="/find-reservation" onClick={closeMenu}>Manage Booking</Link>
+                <Link to="/login" onClick={closeMenu}>Login</Link>
+              </>
             )}
 
             <Link

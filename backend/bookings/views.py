@@ -66,15 +66,34 @@ class MyReservationsView(generics.ListAPIView):
         return Reservation.objects.filter(user=self.request.user).select_related("room_type")
 
 
-class ReservationLookupView(generics.RetrieveAPIView):
-    """GET /api/reservations/lookup/<code>/ — lets a guest with no account
-    check their booking status using the code they were given at checkout."""
+class ReservationLookupView(APIView):
+    """POST /api/reservations/lookup/ — lets a guest with no account check
+    their booking status using the reservation code AND the email they
+    booked with (both must match, so a code alone isn't enough)."""
 
-    queryset = Reservation.objects.all()
-    serializer_class = ReservationSerializer
-    lookup_field = "reservation_code"
-    lookup_url_kwarg = "code"
     permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        code = request.data.get("reservation_code", "").strip()
+        email = request.data.get("email", "").strip()
+
+        if not code or not email:
+            return Response(
+                {"detail": "Please provide both your reservation code and email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reservation = Reservation.objects.filter(
+            reservation_code__iexact=code, guest_email__iexact=email
+        ).first()
+
+        if not reservation:
+            return Response(
+                {"detail": "We couldn't find a reservation matching that code and email."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(ReservationSerializer(reservation).data)
 
 
 class CancelReservationView(APIView):

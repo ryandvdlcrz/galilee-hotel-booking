@@ -60,9 +60,9 @@ export default function BookingCheckoutPage() {
   const displayTotal = subtotal + extraGuestFee + RESORT_FEE_DISPLAY
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setSubmitting(true)
+  e.preventDefault()
+  setError('')
+  setSubmitting(true)
 
     try {
       // NOTE: total_price is calculated server-side as price_per_night x
@@ -72,12 +72,13 @@ export default function BookingCheckoutPage() {
         room_type: bookingDetails.roomId,
         check_in_date: checkIn,
         check_out_date: checkOut,
-        num_rooms: 1,
+        num_rooms: bookingDetails.roomIds.length,
         num_guests: adults + children,
         guest_name: `${firstName} ${lastName}`.trim(),
         guest_email: email,
         guest_phone: phone,
         special_requests: specialRequests,
+        room_ids: bookingDetails.roomIds,
       })
       navigate('/booking/confirmation', { state: { reservation, room, adults, children } })
     } catch (err) {

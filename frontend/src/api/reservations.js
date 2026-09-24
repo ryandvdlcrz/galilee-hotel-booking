@@ -16,9 +16,13 @@ export async function getMyReservations() {
   return data
 }
 
-/** Look up a single reservation by its public code (used for guest lookups). */
-export async function getReservationByCode(code) {
-  const { data } = await client.get(`/reservations/lookup/${code}/`)
+/** Look up a reservation by its code + the email it was booked with.
+ * Both must match — a code alone isn't enough to view someone's booking. */
+export async function lookupReservation(reservationCode, email) {
+  const { data } = await client.post('/reservations/lookup/', {
+    reservation_code: reservationCode,
+    email,
+  })
   return data
 }
 

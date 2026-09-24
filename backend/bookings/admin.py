@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from .models import Amenity, RoomType, RoomImage, Reservation, Promo, UserProfile
+from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
 
 
 class UserProfileInline(admin.StackedInline):
@@ -30,6 +30,10 @@ class RoomImageInline(admin.TabularInline):
     model = RoomImage
     extra = 1
 
+class RoomInLine(admin.TabularInline):
+    """Let staff add/manage individual room numbers directly from the RoomType edit page."""
+    model = Room
+    extra = 1
 
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
@@ -38,8 +42,13 @@ class RoomTypeAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ("amenities",)
-    inlines = [RoomImageInline]
+    inlines = [RoomImageInline, RoomInLine]
 
+@admin.register(Room)
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ("room_number", "room_type", "is_active")
+    list_filter = ("room_type", "is_active")
+    search_fields = ("room_number",)
 
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
@@ -84,3 +93,60 @@ class ReservationAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
     )
+
+
+# ---------------------------------------------------------------------------
+# Admin dashboard — adds summary stats to the top of the Django Admin
+# index page (checked-in guests, room availability today, etc).
+# See backend/templates/admin/index.html for the template that renders this.
+# ---------------------------------------------------------------------------
+
+from datetime import timedelta
+from django.utils import timezone
+
+_original_index = admin.site.index
+
+
+def dashboard_index(request, extra_context=None):
+    extra_context = extra_context or {}
+
+    today = timezone.now().date()
+    tomorrow = today + timedelta(days=1)
+
+    room_types = list(RoomType.objects.filter(is_active=True))
+    total_rooms = sum(rt.total_rooms for rt in room_types)
+    available_today = sum(rt.available_rooms_for_range(today, tomorrow) for rt in room_types)
+    occupied_today = total_rooms - available_today
+
+    per_room_type = [
+        {
+            "name": rt.name,
+            "total": rt.total_rooms,
+            "available": rt.available_rooms_for_range(today, tomorrow),
+        }
+        for rt in room_types
+    ]
+
+    extra_context["dashboard_stats"] = {
+        "checked_in": Reservation.objects.filter(status=Reservation.Status.CHECKED_IN).count(),
+        "pending": Reservation.objects.filter(status=Reservation.Status.PENDING).count(),
+        "confirmed": Reservation.objects.filter(status=Reservation.Status.CONFIRMED).count(),
+        "checkins_today": Reservation.objects.filter(
+            check_in_date=today, status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED]
+        ).count(),
+        "checkouts_today": Reservation.objects.filter(
+            check_out_date=today, status=Reservation.Status.CHECKED_IN
+        ).count(),
+        "total_rooms": total_rooms,
+        "available_today": available_today,
+        "occupied_today": occupied_today,
+        "per_room_type": per_room_type,
+    }
+
+    return _original_index(request, extra_context)
+
+
+admin.site.index = dashboard_index
+admin.site.site_header = "Galilee Mansion Admin"
+admin.site.site_title = "Galilee Mansion Admin"
+admin.site.index_title = "Dashboard"
