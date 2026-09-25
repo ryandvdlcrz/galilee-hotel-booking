@@ -11,6 +11,7 @@ from .views import (
     RegisterView,
     LoginView,
     MeView,
+    GoogleLoginView,
 )
 
 router = DefaultRouter()
@@ -29,5 +30,6 @@ urlpatterns = [
     # Auth
     path("auth/register/", RegisterView.as_view(), name="auth-register"),
     path("auth/login/", LoginView.as_view(), name="auth-login"),
+    path("auth/google/", GoogleLoginView.as_view(), name="auth-google"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
 ]

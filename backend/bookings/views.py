@@ -4,6 +4,11 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from django.contrib.auth.models import User
+from .models import UserProfile
 
 from .models import RoomType, Reservation, Promo
 from .serializers import (
@@ -155,6 +160,41 @@ class LoginView(APIView):
         return Response({"token": token.key, "user": UserSerializer(user).data})
 
 
+class GoogleLoginView(APIView):
+    """POST /api/auth/google/ — expects { credential } (the ID token from Google)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        credential = request.data.get("credential")
+        if not credential:
+            return Response({"detail": "Missing Google credential."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential, google_requests.Request(), settings.GOOGLE_CLIENT_ID
+            )
+        except ValueError:
+            return Response({"detail": "Invalid Google token."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        email = idinfo.get("email")
+        if not email:
+            return Response({"detail": "Google account has no email."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user, created = User.objects.get_or_create(
+            username=email,
+            defaults={
+                "email": email,
+                "first_name": idinfo.get("given_name", ""),
+                "last_name": idinfo.get("family_name", ""),
+            },
+        )
+        if created:
+            UserProfile.objects.create(user=user)
+
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key, "user": UserSerializer(user).data})
+    
 class MeView(APIView):
     """GET /api/auth/me/ — returns the currently logged-in user."""
 

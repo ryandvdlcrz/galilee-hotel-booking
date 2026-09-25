@@ -20,3 +20,8 @@ export async function fetchCurrentUser() {
   const { data } = await client.get('/auth/me/')
   return data
 }
+
+export async function googleLoginRequest(credential) {
+  const { data } = await client.post('/auth/google/', { credential })
+  return data
+}

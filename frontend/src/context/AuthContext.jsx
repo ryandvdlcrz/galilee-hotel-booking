@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from 'react'
-import { loginRequest, registerRequest, fetchCurrentUser } from '../api/auth'
+import { loginRequest, registerRequest, fetchCurrentUser, googleLoginRequest } from '../api/auth'
+
 
 export const AuthContext = createContext(null)
 
@@ -27,6 +28,13 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  async function loginWithGoogle(credential) {
+  const data = await googleLoginRequest(credential)
+  localStorage.setItem('authToken', data.token)
+  setUser(data.user)
+  return data.user
+}
+
   async function register(fields) {
     const data = await registerRequest(fields)
     localStorage.setItem('authToken', data.token)
@@ -40,7 +48,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   )
