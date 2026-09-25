@@ -72,7 +72,6 @@ class RoomType(models.Model):
     total_rooms = models.PositiveIntegerField(
         help_text="Total number of rooms of this type available at the hotel."
     )
-    size_sqm = models.PositiveIntegerField(blank=True, null=True)
     amenities = models.ManyToManyField(Amenity, blank=True, related_name="room_types")
     is_active = models.BooleanField(
         default=True, help_text="Uncheck to hide this room type from customers without deleting it."

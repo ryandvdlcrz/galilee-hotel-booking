@@ -45,7 +45,6 @@ class RoomTypeSerializer(serializers.ModelSerializer):
             "extra_pax_fee",
             "bed_configuration",
             "total_rooms",
-            "size_sqm",
             "amenities",
             "images",
             "is_active",

@@ -59,7 +59,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://galilee-hotel-booking.vercel.app/api",
+    "https://galilee-hotel-booking.vercel.app",
 ]
 
 REST_FRAMEWORK = {
