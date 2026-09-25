@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 /** Matches the "Deluxe Garden Suite" style card from the Figma design. */
-export default function RoomCard({ room, badge }) {
+export default function RoomCard({ room, badge, bookingQuery = '' }) {
   const primaryImage = room.images?.find((img) => img.is_primary) ?? room.images?.[0]
 
   return (
@@ -38,7 +38,7 @@ export default function RoomCard({ room, badge }) {
             </span>
           </div>
           <Link
-            to={`/rooms/${room.slug}`}
+            to={`/rooms/${room.slug}${bookingQuery}`}
             className="text-sm font-semibold text-[#16264c] hover:underline"
           >
             View Details

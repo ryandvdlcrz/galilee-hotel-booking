@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Wifi, Snowflake, Tv, Info, Clock, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { getRoomTypeBySlug, getRoomTypes } from '../api/rooms'
 import { nightsBetween } from '../utils/formatDate'
@@ -16,6 +16,7 @@ const CHECK_IN_OUT_POLICY = 'Check-in from 3:00 PM. Check-out by 11:00 AM. Late 
 export default function RoomDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [room, setRoom] = useState(null)
   const [otherRooms, setOtherRooms] = useState([])
@@ -23,10 +24,10 @@ export default function RoomDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
 
-  const [checkIn, setCheckIn] = useState('')
-  const [checkOut, setCheckOut] = useState('')
-  const [adults, setAdults] = useState(2)
-  const [children, setChildren] = useState(0)
+  const [checkIn, setCheckIn] = useState(searchParams.get('check_in') || '')
+  const [checkOut, setCheckOut] = useState(searchParams.get('check_out') || '')
+  const [adults, setAdults] = useState(Number(searchParams.get('adults')) || 2)
+  const [children, setChildren] = useState(Number(searchParams.get('children')) || 0)
   const [error, setError] = useState('')
   const [selectedRoomIds, setSelectedRoomIds] = useState([])
   const [availableRoomNumbers, setAvailableRoomNumbers] = useState([])

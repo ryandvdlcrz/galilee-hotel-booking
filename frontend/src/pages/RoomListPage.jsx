@@ -35,6 +35,9 @@ export default function RoomListPage() {
   }, [checkIn, checkOut])
 
   const hasDates = Boolean(checkIn && checkOut)
+  const bookingQuery = hasDates
+  ? `?check_in=${checkIn}&check_out=${checkOut}&adults=${adults}&children=${children}`
+  : ''
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
@@ -70,7 +73,7 @@ export default function RoomListPage() {
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
             <div key={room.id}>
-              <RoomCard room={room} />
+              <RoomCard room={room} bookingQuery={bookingQuery}/>
               {hasDates && (
                 <p
                   className={`mt-2 text-xs font-medium ${
