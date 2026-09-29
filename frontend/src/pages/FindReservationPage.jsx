@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Search, Calendar, Users } from 'lucide-react'
+import { Search, Calendar, Users, Clock } from 'lucide-react'
 import { lookupReservation } from '../api/reservations'
 import { formatDate, nightsBetween } from '../utils/formatDate'
+import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 
 const STATUS_STYLES = {
   pending: { label: 'Pending Confirmation', className: 'bg-amber-100 text-amber-700' },
@@ -109,6 +110,9 @@ export default function FindReservationPage() {
                 <Calendar className="h-4 w-4" />
                 {formatDate(reservation.check_in_date)} – {formatDate(reservation.check_out_date)}
                 {' '}({nights} night{nights !== 1 ? 's' : ''})
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" /> Check-in {CHECK_IN_TIME}, check-out {CHECK_OUT_TIME}
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" /> {reservation.num_guests} guest{reservation.num_guests !== 1 ? 's' : ''}

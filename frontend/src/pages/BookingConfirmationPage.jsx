@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { CheckCircle2, Calendar, Users, Phone, Mail, ArrowLeft } from 'lucide-react'
 import { cancelReservation } from '../api/reservations'
 import { formatDate, nightsBetween } from '../utils/formatDate'
+import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 
 // Display-only for now — matches the amount shown at checkout, but not
 // yet part of the backend's actual stored total_price. See BookingCheckoutPage.
@@ -119,6 +120,9 @@ export default function BookingConfirmationPage() {
                       {formatDate(reservation.check_in_date)} – {formatDate(reservation.check_out_date)}
                     </p>
                     <p className="text-xs text-gray-500">{nights} Night{nights !== 1 ? 's' : ''} total duration</p>
+                    <p className="text-xs text-gray-500">
+                      Check-in from {CHECK_IN_TIME}, check-out by {CHECK_OUT_TIME}
+                    </p>
                   </div>
                 </div>
 

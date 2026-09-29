@@ -5,6 +5,7 @@ import { getRoomTypeBySlug } from '../api/rooms'
 import { createReservation } from '../api/reservations'
 import { useAuth } from '../hooks/useAuth'
 import { nightsBetween } from '../utils/formatDate'
+import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 
 // Display-only for now — not yet part of the actual charged total.
 // See note in handleSubmit() below.
@@ -220,10 +221,12 @@ export default function BookingCheckoutPage() {
                 <div>
                   <p className="text-xs font-semibold uppercase text-gray-500">Check-In</p>
                   <p className="font-semibold text-[#16264c]">{checkIn}</p>
+                  <p className="text-xs text-gray-500">From {CHECK_IN_TIME}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase text-gray-500">Check-Out</p>
                   <p className="font-semibold text-[#16264c]">{checkOut}</p>
+                  <p className="text-xs text-gray-500">Until {CHECK_OUT_TIME}</p>
                 </div>
               </div>
 
