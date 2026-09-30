@@ -141,7 +141,7 @@ _original_index = admin.site.index
 def dashboard_index(request, extra_context=None):
     extra_context = extra_context or {}
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
 
     room_types = list(RoomType.objects.filter(is_active=True))
@@ -179,6 +179,38 @@ def dashboard_index(request, extra_context=None):
         "occupied_today": occupied_today,
         "per_room_type": per_room_type,
     }
+
+    # Check-out reminders: only guests who are currently checked in
+    def checked_in_with(**filters):
+        return list(
+            Reservation.objects
+            .filter(status=Reservation.Status.CHECKED_IN, **filters)
+            .select_related("room_type")
+            .order_by("check_out_date", "guest_name")
+        )
+
+    checkout_reminders = [
+        {
+            "label": "Overdue",
+            "color": "#dc2626",
+            "bg": "#fef2f2",
+            "reservations": checked_in_with(check_out_date__lt=today),
+        },
+        {
+            "label": "Check-out today",
+            "color": "#b45309",
+            "bg": "#fffbeb",
+            "reservations": checked_in_with(check_out_date=today),
+        },
+        {
+            "label": "Check-out tomorrow",
+            "color": "#16264c",
+            "bg": "#f1f5f9",
+            "reservations": checked_in_with(check_out_date=tomorrow),
+        },
+    ]
+    extra_context["checkout_reminders"] = checkout_reminders
+    extra_context["has_checkout_reminders"] = any(g["reservations"] for g in checkout_reminders)
 
     return _original_index(request, extra_context)
 

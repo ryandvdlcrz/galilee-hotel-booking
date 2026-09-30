@@ -53,6 +53,35 @@
 
 </div>
 
+{% if has_checkout_reminders %}
+<div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
+  <p style="margin:0 0 12px;font-size:13px;font-weight:bold;color:#16264c;">Check-out Reminders</p>
+
+  {% for group in checkout_reminders %}
+    {% if group.reservations %}
+    <div style="border-left:4px solid {{ group.color }};background:{{ group.bg }};border-radius:4px;padding:10px 12px;margin-bottom:10px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;color:{{ group.color }};">
+        {{ group.label }} ({{ group.reservations|length }})
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        {% for r in group.reservations %}
+        <tr style="border-top:1px solid rgba(0,0,0,.06);">
+          <td style="padding:6px 4px;font-weight:bold;">{{ r.reservation_code }}</td>
+          <td style="padding:6px 4px;">{{ r.guest_name }}</td>
+          <td style="padding:6px 4px;color:#666;">{{ r.room_type.name }}</td>
+          <td style="padding:6px 4px;color:#666;">Out: {{ r.check_out_date|date:"M d" }}</td>
+          <td style="padding:6px 4px;text-align:right;">
+            <a href="{% url 'admin:bookings_reservation_change' r.pk %}" style="color:#a6842f;font-weight:bold;">Open</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if dashboard_stats.per_room_type %}
 <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
   <p style="margin:0 0 10px;font-size:13px;font-weight:bold;color:#16264c;">Availability by Room Type (Today)</p>
