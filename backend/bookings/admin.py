@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.utils.html import format_html
 from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
 
 
@@ -67,23 +68,41 @@ class ReservationAdmin(admin.ModelAdmin):
         "check_in_date",
         "check_out_date",
         "num_rooms",
-        "status",
+        "status_badge",
         "total_price",
     )
-    list_filter = ("status", "room_type")
+    list_filter = ("status", "room_type", "check_in_date")
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
     readonly_fields = ("reservation_code", "total_price", "created_at", "updated_at")
     date_hierarchy = "check_in_date"
+    filter_horizontal = ("rooms",)
+
+    STATUS_COLORS = {
+        "pending": ("#92400e", "#fef3c7"),
+        "confirmed": ("#166534", "#dcfce7"),
+        "checked_in": ("#1e3a8a", "#dbeafe"),
+        "checked_out": ("#374151", "#e5e7eb"),
+        "cancelled": ("#991b1b", "#fee2e2"),
+    }
+
+    @admin.display(description="Status", ordering="status")
+    def status_badge(self, obj):
+        fg, bg = self.STATUS_COLORS.get(obj.status, ("#374151", "#e5e7eb"))
+        return format_html(
+            '<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
+            fg, bg, obj.get_status_display(),
+        )
 
     fieldsets = (
         ("Reservation", {
-            "fields": ("reservation_code", "status", "user")
+            "fields": (("reservation_code", "status"), "user")
         }),
         ("Guest details", {
-            "fields": ("guest_name", "guest_email", "guest_phone")
+            "fields": ("guest_name", ("guest_email", "guest_phone"))
         }),
         ("Booking details", {
-            "fields": ("room_type", "num_rooms", "num_guests", "check_in_date", "check_out_date", "special_requests")
+            "fields": ("room_type", ("num_rooms", "num_guests"), "rooms", ("check_in_date", "check_out_date"), "special_requests")
         }),
         ("Pricing", {
             "fields": ("total_price",)
@@ -150,3 +169,4 @@ admin.site.index = dashboard_index
 admin.site.site_header = "Galilee Mansion Admin"
 admin.site.site_title = "Galilee Mansion Admin"
 admin.site.index_title = "Dashboard"
+admin.site.site_url = "https://galilee-hotel-booking.vercel.app"

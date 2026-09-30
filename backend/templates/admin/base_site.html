@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'bookings/css/galilee-admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<a href="{% url 'admin:index' %}" class="gm-brand">
+  <img src="{% static 'images/galilee-logo.jpg' %}" alt="Galilee Mansion">
+  <span>
+    <strong>Galilee Mansion</strong>
+    <small>STAFF PORTAL</small>
+  </span>
+</a>
+{% endblock %}
+
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% include "admin/gm_sidebar.html" %}{% endblock %}

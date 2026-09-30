@@ -1,0 +1,39 @@
+<aside class="gm-sidebar" aria-label="Main navigation">
+  <div class="gm-sidebar-inner">
+    <p class="gm-label">Management</p>
+    <nav class="gm-nav">
+      {% url 'admin:index' as gm_index_url %}
+      <a class="gm-link{% if request.path == gm_index_url %} is-active{% endif %}" href="{{ gm_index_url }}">Dashboard</a>
+    </nav>
+
+    <div class="gm-apps">
+      {% for app in available_apps %}
+        <div class="gm-app gm-app-{{ app.app_label }}">
+          <p class="gm-label">{{ app.name }}</p>
+          <nav class="gm-nav">
+            {% for model in app.models %}
+              {% if model.admin_url %}
+                <a class="gm-link gm-m-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} is-active{% endif %}" href="{{ model.admin_url }}">{{ model.name }}</a>
+              {% endif %}
+            {% endfor %}
+          </nav>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="gm-account">
+      <p class="gm-label">Account</p>
+      {% if site_url %}
+        <a class="gm-link gm-small" href="{{ site_url }}" target="_blank" rel="noopener">View website</a>
+      {% endif %}
+      <span class="gm-user">{% firstof user.get_short_name user.get_username %}</span>
+      {% if user.has_usable_password %}
+        <a class="gm-link gm-small" href="{% url 'admin:password_change' %}">Change password</a>
+      {% endif %}
+      <form method="post" action="{% url 'admin:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="gm-link gm-small">Sign out</button>
+      </form>
+    </div>
+  </div>
+</aside>

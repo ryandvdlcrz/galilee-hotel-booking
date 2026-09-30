@@ -1,6 +1,22 @@
 {% extends "admin/index.html" %}
 
+{% block content_title %}{% endblock %}
+
+{% block nav-sidebar %}{% include "admin/gm_sidebar.html" %}{% endblock %}
+
 {% block content %}
+
+<div class="gm-hero">
+  <div>
+    <p class="gm-eyebrow">Galilee Mansion · Staff Portal</p>
+    <h2>Welcome back, {% firstof user.get_short_name user.get_username %}</h2>
+    <p>Manage reservations, rooms, promos, amenities, and guest accounts.</p>
+  </div>
+  {% if perms.bookings.add_reservation %}
+    <a class="gm-btn" href="{% url 'admin:bookings_reservation_add' %}">New reservation</a>
+  {% endif %}
+</div>
+
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;">
 
   <div style="background:#16264c;color:#fff;border-radius:8px;padding:16px;">
@@ -61,5 +77,24 @@
 </div>
 {% endif %}
 
-{{ block.super }}
+<div class="gm-quick">
+  <div class="gm-quick-head">
+    <div>
+      <p class="gm-eyebrow">Hotel management</p>
+      <h3>Quick access</h3>
+    </div>
+    <span>Choose an area to manage</span>
+  </div>
+  <div class="gm-quick-grid">
+    {% for app in app_list %}{% for model in app.models %}
+      <div class="gm-quick-card">
+        <h4>{{ model.name }}</h4>
+        <div class="gm-quick-actions">
+          {% if model.admin_url %}<a href="{{ model.admin_url }}">View</a>{% endif %}
+          {% if model.add_url %}<a href="{{ model.add_url }}">+ Add</a>{% endif %}
+        </div>
+      </div>
+    {% endfor %}{% endfor %}
+  </div>
+</div>
 {% endblock %}

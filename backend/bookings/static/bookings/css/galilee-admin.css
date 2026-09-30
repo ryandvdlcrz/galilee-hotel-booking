@@ -1,0 +1,127 @@
+/* ---------- Theme variables (recolors default admin) ---------- */
+:root {
+  --primary: #16264c;
+  --secondary: #16264c;
+  --accent: #a6842f;
+  --body-fg: #16264c;
+  --body-bg: #ffffff;
+  --body-quiet-color: #6b7280;
+  --body-loud-color: #16264c;
+  --header-color: #16264c;
+  --header-branding-color: #16264c;
+  --header-bg: #faf7f0;
+  --breadcrumbs-fg: #6b7280;
+  --breadcrumbs-link-fg: #16264c;
+  --breadcrumbs-bg: transparent;
+  --link-fg: #16264c;
+  --link-hover-color: #a6842f;
+  --link-selected-fg: #a6842f;
+  --hairline-color: #eee7d3;
+  --border-color: #e6dfcc;
+  --darkened-bg: #faf7f0;
+  --selected-bg: #f5efdd;
+  --selected-row: #fbf3d9;
+  --button-bg: #16264c;
+  --button-hover-bg: #1f3468;
+  --default-button-bg: #a6842f;
+  --default-button-hover-bg: #8c6e26;
+  --object-tools-bg: #16264c;
+  --object-tools-hover-bg: #1f3468;
+}
+
+html, body { background: #faf7f0; }
+
+/* ---------- Header ---------- */
+#header { padding: 12px 28px; border-bottom: 1px solid #e6dfcc; background: #faf7f0; }
+#header a:link, #header a:visited { color: #16264c; }
+.gm-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.gm-brand img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.gm-brand strong { display: block; font-size: 16px; line-height: 1.2; }
+.gm-brand small { display: block; font-size: 9px; font-weight: 600; letter-spacing: .15em; color: #6b7280; }
+
+/* ---------- Layout ---------- */
+.main { background: #faf7f0; }
+.main > .content { min-width: 0; }
+#content { padding: 28px 40px; }
+body.dashboard #content { width: auto; }
+
+/* ---------- Sidebar ---------- */
+.gm-sidebar { flex: 0 0 240px; width: 240px; box-sizing: border-box; padding: 22px 14px; background: #faf7f0; border-right: 1px solid #e6dfcc; }
+.gm-sidebar-inner { position: sticky; top: 16px; }
+.gm-label { margin: 18px 0 8px 12px; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #8b8577; }
+.gm-sidebar-inner > .gm-label:first-child { margin-top: 0; }
+.gm-nav { display: flex; flex-direction: column; gap: 4px; }
+.gm-sidebar a.gm-link, .gm-sidebar button.gm-link {
+  display: block; width: 100%; box-sizing: border-box; padding: 10px 14px; border: 0; border-radius: 10px;
+  background: transparent; color: #16264c; font-size: 13px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer;
+}
+.gm-sidebar a.gm-link:hover, .gm-sidebar button.gm-link:hover { background: #f1ead8; }
+.gm-sidebar a.gm-link.is-active { background: #16264c; color: #fff; box-shadow: 0 6px 16px rgba(22, 38, 76, .2); }
+.gm-account { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e6dfcc; }
+.gm-user { display: block; padding: 6px 14px; font-size: 12px; color: #6b7280; }
+.gm-sidebar .gm-small { font-size: 12px; }
+
+/* ---------- Cards, tables, forms ---------- */
+.module { background: #fff; border: 1px solid #e6dfcc; border-radius: 12px; }
+.module h2, .module caption { padding: 10px 14px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; border-radius: 11px 11px 0 0; }
+.button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 8px; }
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus,
+input[type=url]:focus, input[type=tel]:focus, input[type=date]:focus, textarea:focus, select:focus {
+  border-color: #16264c; outline: none; box-shadow: 0 0 0 3px rgba(22, 38, 76, .12);
+}
+
+/* ---------- Dashboard hero + quick access ---------- */
+.gm-hero { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin: 0 0 28px; }
+.gm-eyebrow { margin: 0 0 8px; font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #a6842f; }
+.gm-hero h2 { margin: 0 0 8px; padding: 0; font-size: 30px; font-weight: 700; text-transform: none; color: #16264c; background: none; }
+.gm-hero p { margin: 0; max-width: 460px; font-size: 14px; color: #6b7280; }
+a.gm-btn:link, a.gm-btn:visited { display: inline-block; padding: 12px 20px; border-radius: 10px; background: #a6842f; color: #16264c; font-size: 13px; font-weight: 700; text-decoration: none; }
+a.gm-btn:hover { background: #8c6e26; color: #fff; }
+
+.gm-quick { margin-bottom: 28px; padding: 24px; background: #fff; border: 1px solid #e6dfcc; border-radius: 18px; box-shadow: 0 12px 30px rgba(22, 38, 76, .06); }
+.gm-quick-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.gm-quick-head h3 { margin: 0; font-size: 20px; font-weight: 700; text-transform: none; color: #16264c; }
+.gm-quick-head span { font-size: 12px; color: #9ca3af; }
+.gm-quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.gm-quick-card { padding: 18px; border: 1px solid #e6dfcc; border-radius: 14px; }
+.gm-quick-card h4 { margin: 0 0 14px; font-size: 16px; font-weight: 700; text-transform: none; color: #16264c; }
+.gm-quick-actions { display: flex; gap: 14px; font-size: 12px; font-weight: 600; }
+.gm-quick-actions a:link, .gm-quick-actions a:visited { color: #a6842f; text-decoration: none; }
+.gm-quick-actions a:hover { color: #16264c; }
+
+/* ---------- Changelist (list pages) ---------- */
+#content h1 { font-size: 24px; font-weight: 700; color: #16264c; }
+body #changelist-filter { background: transparent; border-left: 1px solid #e6dfcc; }
+body #changelist-filter h2 { background: none; color: #16264c; border-radius: 0; padding: 14px 16px 6px; }
+
+/* ---------- Forms ---------- */
+body .aligned label, body .aligned .required label { font-weight: 600; color: #16264c; }
+.aligned input[type=text], .aligned input[type=email], .aligned input[type=number],
+.aligned input[type=tel], .aligned input[type=url], .aligned input[type=date], .aligned input[type=time] {
+  box-sizing: border-box; height: 36px; padding: 0 10px; border-radius: 8px;
+}
+.aligned select {
+  box-sizing: border-box; height: 36px; padding: 0 30px 0 10px; border-radius: 8px; line-height: 1.2;
+}
+.aligned textarea { padding: 8px 10px; border-radius: 8px; }
+.submit-row { position: sticky; bottom: 0; z-index: 5; border-radius: 12px; box-shadow: 0 -6px 16px rgba(22, 38, 76, .08); }
+
+/* Reservation form lang: itago ang edit/add/delete/view icons sa tabi ng User at Room type */
+body.model-reservation .related-widget-wrapper-link { display: none; }
+
+/* ---------- Sidebar order: Bookings sa taas, Reservations una ---------- */
+.gm-apps { display: flex; flex-direction: column; }
+.gm-app-bookings { order: -1; }
+.gm-m-reservation { order: 1; }
+.gm-m-roomtype { order: 2; }
+.gm-m-room { order: 3; }
+.gm-m-promo { order: 4; }
+.gm-m-amenity { order: 5; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 900px) {
+  .main { flex-direction: column; }
+  .gm-sidebar { flex: none; width: 100%; border-right: 0; border-bottom: 1px solid #e6dfcc; }
+  .gm-sidebar-inner { position: static; }
+  #content { padding: 20px 16px; }
+}
