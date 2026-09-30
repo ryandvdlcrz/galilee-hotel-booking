@@ -133,18 +133,24 @@ def dashboard_index(request, extra_context=None):
     tomorrow = today + timedelta(days=1)
 
     room_types = list(RoomType.objects.filter(is_active=True))
-    total_rooms = sum(rt.total_rooms for rt in room_types)
-    available_today = sum(rt.available_rooms_for_range(today, tomorrow) for rt in room_types)
-    occupied_today = total_rooms - available_today
 
-    per_room_type = [
-        {
+    per_room_type = []
+    total_rooms = 0
+    available_today = 0
+    for rt in room_types:
+        rt_total = rt.rooms.filter(is_active=True).count()
+        rt_booked = rt.rooms_booked_for_range(today, tomorrow)
+        rt_available = max(rt_total - rt_booked, 0)
+
+        total_rooms += rt_total
+        available_today += rt_available
+        per_room_type.append({
             "name": rt.name,
-            "total": rt.total_rooms,
-            "available": rt.available_rooms_for_range(today, tomorrow),
-        }
-        for rt in room_types
-    ]
+            "total": rt_total,
+            "available": rt_available,
+        })
+
+    occupied_today = total_rooms - available_today
 
     extra_context["dashboard_stats"] = {
         "checked_in": Reservation.objects.filter(status=Reservation.Status.CHECKED_IN).count(),
