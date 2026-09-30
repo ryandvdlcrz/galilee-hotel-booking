@@ -63,6 +63,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://galilee-hotel-booking.vercel.app",
 ]
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
