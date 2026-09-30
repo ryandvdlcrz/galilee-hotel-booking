@@ -53,7 +53,6 @@
 
 </div>
 
-{% if has_checkout_reminders %}
 <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
   <p style="margin:0 0 12px;font-size:13px;font-weight:bold;color:#16264c;">Check-out Reminders</p>
 
@@ -79,8 +78,11 @@
     </div>
     {% endif %}
   {% endfor %}
+
+  {% if not has_checkout_reminders %}
+    <p style="margin:0;font-size:13px;color:#888;">No guests due to check out today or tomorrow.</p>
+  {% endif %}
 </div>
-{% endif %}
 
 {% if dashboard_stats.per_room_type %}
 <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
