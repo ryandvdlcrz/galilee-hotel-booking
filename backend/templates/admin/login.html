@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Login | Galilee Mansion</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+    margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: #faf7f0;
+      color: #16264c;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+    .gm-wrapper {
+    width: 100%;
+    max-width: 392px;
+    background: #faf7f0;
+    border: 1px solid #e6dfcc;
+    border-radius: 18px;
+    overflow: hidden;
+        }
+
+    .gm-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e6dfcc;
+    }
+
+    .gm-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .gm-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #16264c;
+    }
+
+    .gm-sub {
+      margin: 2px 0 0;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      color: #6b7280;
+    }
+
+    .gm-body {
+      padding: 68px 37px 40px;
+    }
+
+    .gm-card {
+      background: #fff;
+      border: 1px solid #e6dfcc;
+      border-radius: 18px;
+      padding: 40px 28px 30px;
+      box-shadow: 0 12px 30px rgba(22, 38, 76, .08);
+    }
+
+    .gm-error {
+      margin: 0 0 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 13px;
+    }
+
+    .gm-field { margin-bottom: 20px; }
+
+    .gm-field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #16264c;
+    }
+
+    .gm-field input {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #e6dfcc;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 14px;
+      color: #16264c;
+      outline: none;
+    }
+
+    .gm-field input:focus {
+      border-color: #16264c;
+      box-shadow: 0 0 0 3px rgba(22, 38, 76, .12);
+    }
+
+    .gm-submit {
+      width: 100%;
+      height: 42px;
+      margin-top: 4px;
+      border: none;
+      border-radius: 8px;
+      background: #16264c;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .gm-submit:hover { background: #1f3468; }
+  </style>
+</head>
+<body>
+
+  <div class="gm-wrapper">
+
+    <div class="gm-header">
+      <img src="{% static 'images/galilee-logo.jpg' %}" alt="Galilee Mansion" class="gm-logo">
+      <div>
+        <p class="gm-title">Galilee Mansion</p>
+        <p class="gm-sub">STAFF PORTAL</p>
+      </div>
+    </div>
+
+    <div class="gm-body">
+      <form method="post" action="{{ app_path }}" class="gm-card">
+        {% csrf_token %}
+
+        {% if form.errors and not form.non_field_errors %}
+          <p class="gm-error">Please correct the errors below.</p>
+        {% endif %}
+        {% for error in form.non_field_errors %}
+          <p class="gm-error">{{ error }}</p>
+        {% endfor %}
+
+        <div class="gm-field">
+          <label for="id_username">Username:</label>
+          <input type="text" name="username" id="id_username" autofocus required
+                 autocapitalize="none" autocomplete="username">
+        </div>
+
+        <div class="gm-field">
+          <label for="id_password">Password:</label>
+          <input type="password" name="password" id="id_password" required
+                 autocomplete="current-password">
+        </div>
+
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <button type="submit" class="gm-submit">Log in</button>
+      </form>
+    </div>
+
+  </div>
+
+</body>
+</html>
