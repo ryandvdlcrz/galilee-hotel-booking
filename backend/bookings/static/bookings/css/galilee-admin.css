@@ -64,6 +64,21 @@ body.dashboard #content { width: auto; }
 /* ---------- Cards, tables, forms ---------- */
 .module { background: #fff; border: 1px solid #e6dfcc; border-radius: 12px; }
 .module h2, .module caption { padding: 10px 14px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; border-radius: 11px 11px 0 0; }
+
+/* Section headings (Reservation, Guest details, Booking details, etc.):
+   navy text on cream so they are readable. */
+body .module h2,
+body .module caption,
+body .inline-group h2 {
+  background: #faf7f0;
+  color: #16264c;
+}
+/* Keep the "Chosen" box header of the horizontal filter navy with white text */
+body .selector-chosen h2 {
+  background: #16264c;
+  color: #fff;
+}
+
 .button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 8px; }
 input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus,
 input[type=url]:focus, input[type=tel]:focus, input[type=date]:focus, textarea:focus, select:focus {
