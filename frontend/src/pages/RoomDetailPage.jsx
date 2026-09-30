@@ -11,7 +11,7 @@ const AMENITY_ICONS = {
   tv: Tv,
 }
 
-const CHECK_IN_OUT_POLICY = 'Check-in from 3:00 PM. Check-out by 11:00 AM. Late check-out subject to availability.'
+const CHECK_IN_OUT_POLICY = 'Check-in from 2:00 PM. Check-out by 12:00 PM. Late check-out subject to availability.'
 
 export default function RoomDetailPage() {
   const { slug } = useParams()

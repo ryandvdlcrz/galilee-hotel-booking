@@ -96,10 +96,18 @@ class ReservationAdmin(admin.ModelAdmin):
             'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
             fg, bg, obj.get_status_display(),
         )
+
     @admin.display(description="Booked on", ordering="created_at")
     def booked_on(self, obj):
         return timezone.localtime(obj.created_at).strftime("%b %d, %Y %I:%M %p")
-    
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Replaces the blank "---------" option with a clearer label
+        # for walk-in guests who don't have an account.
+        if db_field.name == "user":
+            kwargs["empty_label"] = "Guest (walk-in, no account)"
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     fieldsets = (
         ("Reservation", {
             "fields": (("reservation_code", "status"), "user")
@@ -120,7 +128,7 @@ class ReservationAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------------------------
-# Admin dashboard — adds summary stats to the top of the Django Admin
+# Admin dashboard: adds summary stats to the top of the Django Admin
 # index page (checked-in guests, room availability today, etc).
 # See backend/templates/admin/index.html for the template that renders this.
 # ---------------------------------------------------------------------------
