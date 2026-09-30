@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
+from datetime import timedelta
+from django.utils import timezone
 
 
 class UserProfileInline(admin.StackedInline):
@@ -68,10 +70,11 @@ class ReservationAdmin(admin.ModelAdmin):
         "check_in_date",
         "check_out_date",
         "num_rooms",
+        "booked_on",
         "status_badge",
         "total_price",
     )
-    list_filter = ("status", "room_type", "check_in_date")
+    list_filter = ("status", "room_type", "check_in_date", "created_at")
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
     readonly_fields = ("reservation_code", "total_price", "created_at", "updated_at")
     date_hierarchy = "check_in_date"
@@ -93,7 +96,10 @@ class ReservationAdmin(admin.ModelAdmin):
             'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
             fg, bg, obj.get_status_display(),
         )
-
+    @admin.display(description="Booked on", ordering="created_at")
+    def booked_on(self, obj):
+        return timezone.localtime(obj.created_at).strftime("%b %d, %Y %I:%M %p")
+    
     fieldsets = (
         ("Reservation", {
             "fields": (("reservation_code", "status"), "user")
@@ -109,7 +115,6 @@ class ReservationAdmin(admin.ModelAdmin):
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",),
         }),
     )
 
@@ -120,8 +125,7 @@ class ReservationAdmin(admin.ModelAdmin):
 # See backend/templates/admin/index.html for the template that renders this.
 # ---------------------------------------------------------------------------
 
-from datetime import timedelta
-from django.utils import timezone
+
 
 _original_index = admin.site.index
 
