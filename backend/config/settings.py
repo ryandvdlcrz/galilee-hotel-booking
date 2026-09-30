@@ -143,7 +143,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files — now served through Cloudinary instead of local disk,
 # since Render's filesystem is ephemeral (files vanish on restart/redeploy).
@@ -152,7 +151,16 @@ CLOUDINARY_STORAGE = {
     'API_KEY': config('CLOUDINARY_API_KEY'),
     'API_SECRET': config('CLOUDINARY_API_SECRET'),
 }
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Django 5.1+ removed DEFAULT_FILE_STORAGE/STATICFILES_STORAGE — must use STORAGES dict.
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = 'media/'
 
