@@ -9,6 +9,7 @@
   --body-loud-color: #16264c;
   --header-color: #16264c;
   --header-branding-color: #16264c;
+  --header-link-color: #16264c;
   --header-bg: #faf7f0;
   --breadcrumbs-fg: #6b7280;
   --breadcrumbs-link-fg: #16264c;
@@ -69,14 +70,17 @@ body.dashboard #content { width: auto; }
    navy text on cream so they are readable. */
 body .module h2,
 body .module caption,
-body .inline-group h2 {
-  background: #faf7f0;
-  color: #16264c;
+body .inline-group h2,
+body fieldset .fieldset-heading,
+body fieldset .inline-heading,
+body .collapse summary {
+  background: #faf7f0 !important;
+  color: #16264c !important;
 }
 /* Keep the "Chosen" box header of the horizontal filter navy with white text */
 body .selector-chosen h2 {
-  background: #16264c;
-  color: #fff;
+  background: #16264c !important;
+  color: #fff !important;
 }
 
 .button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 8px; }
