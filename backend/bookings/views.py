@@ -210,7 +210,7 @@ class MeView(APIView):
         serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        user = User.objects.get(pk=request.user.pk)  # fresh copy so phone is up to date
+        user = User.objects.select_related("profile").get(pk=request.user.pk)
         return Response(UserSerializer(user).data)
 
 

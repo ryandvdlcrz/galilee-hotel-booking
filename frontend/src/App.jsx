@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -9,13 +10,14 @@ import RoomDetailPage from './pages/RoomDetailPage'
 import BookingCheckoutPage from './pages/BookingCheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
 import MyReservationsPage from './pages/MyReservationsPage'
-import ProfilePage from './pages/ProfilePage'
 import OffersPage from './pages/OffersPage'
 import ContactPage from './pages/ContactPage'
 import NotFoundPage from './pages/NotFoundPage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import FindReservationPage from './pages/FindReservationPage'
+
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 
 function App() {
   return (
@@ -28,7 +30,14 @@ function App() {
         <Route path="/booking/checkout" element={<BookingCheckoutPage />} />
         <Route path="/booking/confirmation" element={<BookingConfirmationPage />} />
         <Route path="/my-reservations" element={<MyReservationsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/profile"
+          element={
+            <Suspense fallback={<p className="py-20 text-center text-sm text-gray-500">Loading…</p>}>
+              <ProfilePage />
+            </Suspense>
+          }
+        />
         <Route path="/find-reservation" element={<FindReservationPage />} />
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/contact" element={<ContactPage />} />
