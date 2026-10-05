@@ -11,6 +11,7 @@ from .views import (
     RegisterView,
     LoginView,
     MeView,
+    ChangePasswordView,
     GoogleLoginView,
 )
 
@@ -32,4 +33,5 @@ urlpatterns = [
     path("auth/login/", LoginView.as_view(), name="auth-login"),
     path("auth/google/", GoogleLoginView.as_view(), name="auth-google"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
+    path("auth/change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
 ]

@@ -17,6 +17,8 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     PromoSerializer,
+    ProfileUpdateSerializer,
+    ChangePasswordSerializer,
 )
 
 
@@ -194,11 +196,32 @@ class GoogleLoginView(APIView):
 
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key, "user": UserSerializer(user).data})
-    
+
+
 class MeView(APIView):
-    """GET /api/auth/me/ — returns the currently logged-in user."""
+    """GET/PATCH /api/auth/me/ — the currently logged-in user."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = User.objects.get(pk=request.user.pk)  # fresh copy so phone is up to date
+        return Response(UserSerializer(user).data)
+
+
+class ChangePasswordView(APIView):
+    """POST /api/auth/change-password/ — expects { current_password, new_password }."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save()
+        return Response({"detail": "Password updated."})

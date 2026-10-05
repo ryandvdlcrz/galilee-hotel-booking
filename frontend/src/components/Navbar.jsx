@@ -6,6 +6,17 @@ import galileeLogo from '../assets/galilee-logo.jpg'
 const navLinkClass = ({ isActive }) =>
   isActive ? 'border-b-2 border-[#a6842f] pb-1' : ''
 
+function ProfileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -34,6 +45,10 @@ export default function Navbar() {
         <div className="hidden items-center gap-4 md:flex">
           {user ? (
             <>
+              <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#16264c]">
+                <ProfileIcon />
+                Profile
+              </Link>
               <Link to="/my-reservations" className="text-sm font-medium text-[#16264c]">
                 My Bookings
               </Link>
@@ -84,6 +99,10 @@ export default function Navbar() {
 
             {user ? (
               <>
+                <Link to="/profile" onClick={closeMenu} className="inline-flex items-center gap-1.5">
+                  <ProfileIcon />
+                  Profile
+                </Link>
                 <Link to="/my-reservations" onClick={closeMenu}>My Bookings</Link>
                 <button onClick={() => { logout(); closeMenu(); }} className="text-left">
                   Sign out

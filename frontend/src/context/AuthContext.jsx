@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from 'react'
-import { loginRequest, registerRequest, fetchCurrentUser, googleLoginRequest } from '../api/auth'
+import { loginRequest, registerRequest, fetchCurrentUser, googleLoginRequest, updateProfileRequest } from '../api/auth'
 
 
 export const AuthContext = createContext(null)
@@ -42,13 +42,19 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  async function updateProfile(fields) {
+    const updated = await updateProfileRequest(fields)
+    setUser(updated)
+    return updated
+  }
+
   function logout() {
     localStorage.removeItem('authToken')
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, loginWithGoogle, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

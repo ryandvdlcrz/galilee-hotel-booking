@@ -25,3 +25,20 @@ export async function googleLoginRequest(credential) {
   const { data } = await client.post('/auth/google/', { credential })
   return data
 }
+
+export async function updateProfileRequest({ firstName, lastName, phone }) {
+  const { data } = await client.patch('/auth/me/', {
+    first_name: firstName,
+    last_name: lastName,
+    phone,
+  })
+  return data
+}
+
+export async function changePasswordRequest(currentPassword, newPassword) {
+  const { data } = await client.post('/auth/change-password/', {
+    current_password: currentPassword,
+    new_password: newPassword,
+  })
+  return data
+}

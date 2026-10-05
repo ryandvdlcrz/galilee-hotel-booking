@@ -223,4 +223,37 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "phone"]
+        fields = ["id", "email", "first_name", "last_name", "phone", "date_joined"]
+
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    phone = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_phone(self, value):
+        if not value:
+            return value
+        return normalize_ph_mobile(value)
+
+    def update(self, instance, validated_data):
+        phone = validated_data.pop("phone", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if phone is not None:
+            profile, _ = UserProfile.objects.get_or_create(user=instance)
+            profile.phone = phone
+            profile.save()
+        return instance
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_current_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
