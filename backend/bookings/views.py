@@ -199,7 +199,7 @@ class GoogleLoginView(APIView):
 
 
 class MeView(APIView):
-    """GET/PATCH /api/auth/me/ — the currently logged-in user."""
+    """GET/PATCH/DELETE /api/auth/me/ — the currently logged-in user."""
 
     permission_classes = [permissions.IsAuthenticated]
 
@@ -212,6 +212,16 @@ class MeView(APIView):
         serializer.save()
         user = User.objects.select_related("profile").get(pk=request.user.pk)
         return Response(UserSerializer(user).data)
+
+    def delete(self, request):
+        user = request.user
+        if user.is_staff or user.is_superuser:
+            return Response(
+                {"detail": "Staff accounts can't be deleted here."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ChangePasswordView(APIView):

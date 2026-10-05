@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { changePasswordRequest } from '../api/auth'
+import { changePasswordRequest, deleteAccountRequest } from '../api/auth'
 
 /* ---------- Icons (inline SVG, no extra dependency) ---------- */
 
@@ -223,18 +223,20 @@ function PersonalInfoPanel({ user }) {
 }
 
 function SecurityPanel() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
-  function handleCancel() {
-    setCurrent('')
-    setNext('')
-    setConfirm('')
-    setMessage({ type: '', text: '' })
-  }
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  const passwordInput =
+    'w-full rounded-lg border border-[#16264c]/15 bg-white px-4 py-3 text-sm text-[#16264c] placeholder:text-gray-400 focus:border-[#a6842f] focus:outline-none'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -263,61 +265,89 @@ function SecurityPanel() {
     }
   }
 
+  async function handleDelete() {
+    const ok = window.confirm('Delete your account permanently? This cannot be undone.')
+    if (!ok) return
+
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await deleteAccountRequest()
+      logout()
+      navigate('/')
+    } catch (err) {
+      setDeleteError(firstError(err, 'Could not delete your account.'))
+      setDeleting(false)
+    }
+  }
+
   return (
-    <Card icon={<ShieldIcon className="h-5 w-5" />} title="Change Password">
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+    <>
+      <Card title="Change Password">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
             <label className={labelClass}>Current Password</label>
-            <div className={fieldWrap}>
-              <input
-                type="password"
-                className={bareInput}
-                value={current}
-                onChange={(e) => setCurrent(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              type="password"
+              className={passwordInput}
+              placeholder="Enter current password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className={labelClass}>New Password</label>
-            <div className={fieldWrap}>
-              <input
-                type="password"
-                className={bareInput}
-                value={next}
-                onChange={(e) => setNext(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              type="password"
+              className={passwordInput}
+              placeholder="Enter new password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className={labelClass}>Confirm New Password</label>
-            <div className={fieldWrap}>
-              <input
-                type="password"
-                className={bareInput}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              type="password"
+              className={passwordInput}
+              placeholder="Confirm new password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
           </div>
-        </div>
 
-        <Message message={message} />
+          <Message message={message} />
 
-        <div className="mt-8 flex justify-end gap-3 border-t border-[#16264c]/10 pt-6">
-          <button type="button" onClick={handleCancel} className={secondaryButton}>
-            Cancel
-          </button>
-          <button type="submit" disabled={saving} className={primaryButton}>
-            <SaveIcon className="h-4 w-4" />
-            {saving ? 'Updating…' : 'Update Password'}
+          <div className="flex justify-end pt-2">
+            <button type="submit" disabled={saving} className={primaryButton}>
+              {saving ? 'Updating…' : 'Update Password'}
+            </button>
+          </div>
+        </form>
+      </Card>
+
+      <section className="mt-6 max-w-3xl rounded-2xl bg-white p-6 shadow-sm md:p-10">
+        <h2 className="text-xl font-bold text-red-700">Delete Account</h2>
+        <div className="mt-5 rounded-lg border border-[#16264c]/10 bg-white p-5">
+          <p className="text-sm text-gray-600">
+            Once you delete your account, there is no going back. Please be certain. All your
+            data, bookings, and personal information will be permanently removed from our servers.
+          </p>
+          {deleteError && <p className="mt-3 text-sm text-red-600">{deleteError}</p>}
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="mt-5 rounded-md bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+          >
+            {deleting ? 'Deleting…' : 'Delete Account'}
           </button>
         </div>
-      </form>
-    </Card>
+      </section>
+    </>
   )
 }
 
@@ -338,7 +368,7 @@ const PAGE_COPY = {
   },
   security: {
     title: 'Account Security',
-    subtitle: 'Manage your password and keep your account safe.',
+    subtitle: 'Manage your password and protect your account.',
   },
   notifications: {
     title: 'Notifications',

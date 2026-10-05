@@ -42,3 +42,7 @@ export async function changePasswordRequest(currentPassword, newPassword) {
   })
   return data
 }
+
+export async function deleteAccountRequest() {
+  await client.delete('/auth/me/')
+}
