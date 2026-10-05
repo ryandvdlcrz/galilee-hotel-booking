@@ -44,7 +44,7 @@ export default function FindReservationPage() {
       <div className="mx-auto max-w-xl px-6 py-16">
         <div className="text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#a6842f]">
-            Manage Booking
+            Find Bookings
           </p>
           <h1 className="mt-1 text-3xl font-bold text-[#16264c] sm:text-4xl">Find My Reservation</h1>
           <p className="mt-2 text-sm text-gray-500">

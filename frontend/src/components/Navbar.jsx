@@ -44,7 +44,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/find-reservation" className="text-sm font-medium text-[#16264c]">
-                Manage Booking
+                Find Bookings
               </Link>
               <Link to="/login" className="text-sm font-semibold text-[#16264c]">
                 Login
@@ -91,7 +91,7 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/find-reservation" onClick={closeMenu}>Manage Booking</Link>
+                <Link to="/find-reservation" onClick={closeMenu}>Find Bookings</Link>
                 <Link to="/login" onClick={closeMenu}>Login</Link>
               </>
             )}
