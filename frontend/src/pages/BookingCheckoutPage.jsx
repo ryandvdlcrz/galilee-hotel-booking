@@ -6,6 +6,7 @@ import { createReservation } from '../api/reservations'
 import { useAuth } from '../hooks/useAuth'
 import { nightsBetween } from '../utils/formatDate'
 import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
+import { toLocalDigits } from '../utils/phone'
 
 // Display-only for now — not yet part of the actual charged total.
 // See note in handleSubmit() below.
@@ -25,7 +26,7 @@ export default function BookingCheckoutPage() {
   const [firstName, setFirstName] = useState(user?.first_name || '')
   const [lastName, setLastName] = useState(user?.last_name || '')
   const [email, setEmail] = useState(user?.email || '')
-  const [phone, setPhone] = useState(user?.phone || '')
+  const [phone, setPhone] = useState(toLocalDigits(user?.phone))
   const [specialRequests, setSpecialRequests] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
@@ -61,9 +62,15 @@ export default function BookingCheckoutPage() {
   const displayTotal = subtotal + extraGuestFee + RESORT_FEE_DISPLAY
 
   async function handleSubmit(e) {
-  e.preventDefault()
-  setError('')
-  setSubmitting(true)
+    e.preventDefault()
+    setError('')
+
+    if (!/^9\d{9}$/.test(phone)) {
+      setError('Please enter a valid Philippine mobile number (e.g. 9171234567).')
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       // NOTE: total_price is calculated server-side as price_per_night x
@@ -77,7 +84,7 @@ export default function BookingCheckoutPage() {
         num_guests: adults + children,
         guest_name: `${firstName} ${lastName}`.trim(),
         guest_email: email,
-        guest_phone: phone,
+        guest_phone: `+63${phone}`,
         special_requests: specialRequests,
         room_ids: bookingDetails.roomIds,
       })
@@ -155,14 +162,21 @@ export default function BookingCheckoutPage() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium text-[#16264c]">Phone Number</span>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+1 (555) 000-0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-[#16264c] focus:outline-none focus:ring-1 focus:ring-[#16264c]"
-                />
+                <div className="flex">
+                  <span className="flex items-center rounded-l-lg border border-r-0 border-gray-200 bg-gray-100 px-3 text-sm font-medium text-[#16264c]">
+                    +63
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    required
+                    maxLength={10}
+                    placeholder="9171234567"
+                    value={phone}
+                    onChange={(e) => setPhone(toLocalDigits(e.target.value))}
+                    className="w-full rounded-r-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-[#16264c] focus:outline-none focus:ring-1 focus:ring-[#16264c]"
+                  />
+                </div>
               </label>
             </div>
 

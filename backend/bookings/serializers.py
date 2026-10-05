@@ -1,7 +1,24 @@
+import re
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .models import Amenity, RoomType, RoomImage, Reservation, Room, Promo, UserProfile
+
+
+def normalize_ph_mobile(value):
+    """Accepts 9171234567, 09171234567, +639171234567, or with spaces/dashes.
+    Returns the number in +639XXXXXXXXX format, or raises a validation error."""
+    digits = re.sub(r"\D", "", value or "")
+    if digits.startswith("63"):
+        digits = digits[2:]
+    elif digits.startswith("0"):
+        digits = digits[1:]
+    if not re.fullmatch(r"9\d{9}", digits):
+        raise serializers.ValidationError(
+            "Enter a valid Philippine mobile number (e.g. +639171234567)."
+        )
+    return f"+63{digits}"
 
 
 class PromoSerializer(serializers.ModelSerializer):
@@ -120,6 +137,9 @@ class ReservationSerializer(serializers.ModelSerializer):
             "rooms"
         ]
         read_only_fields = ["reservation_code", "status", "total_price", "created_at"]
+        # Only needed if you add ph_mobile_validator to Reservation.guest_phone in models.py.
+        # Harmless otherwise. validate_guest_phone() below does the format check.
+        extra_kwargs = {"guest_phone": {"validators": []}}
 
     def get_base_room_cost(self, obj):
         return obj.base_room_cost()
@@ -129,6 +149,9 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def get_extra_guest_fee_total(self, obj):
         return obj.extra_guest_fee_total()
+
+    def validate_guest_phone(self, value):
+        return normalize_ph_mobile(value)
 
     def validate(self, attrs):
         # Reuses the same validation logic defined on the model (date order +
@@ -145,7 +168,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         for room in room_ids:
             if room.room_type_id != room_type.id:
                 raise serializers.ValidationError(
-                    {"room_ids" f"Room {room.room_number} does not belong to the selected room type."}
+                    {"room_ids": f"Room {room.room_number} does not belong to the selected room type."}
                 )
             if not room.is_available_for_range(attrs.get("check_in_date"), attrs.get("check_out_date")):
                 raise serializers.ValidationError(
@@ -177,6 +200,11 @@ class RegisterSerializer(serializers.Serializer):
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("An account with this email already exists.")
         return value
+
+    def validate_phone(self, value):
+        if not value:
+            return value  # phone is optional on registration
+        return normalize_ph_mobile(value)
 
     def create(self, validated_data):
         user = User.objects.create_user(

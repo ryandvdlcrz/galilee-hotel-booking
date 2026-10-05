@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { toLocalDigits } from '../utils/phone'
 import galileeLogo from '../assets/galilee-logo.jpg'
 
 export default function RegisterPage() {
@@ -27,6 +28,11 @@ export default function RegisterPage() {
       return
     }
 
+    if (phone && !/^9\d{9}$/.test(phone)) {
+      setError('Please enter a valid Philippine mobile number (e.g. 9171234567).')
+      return
+    }
+
     // Split "John Doe" into firstName: "John", lastName: "Doe".
     // Anything after the first space is treated as the last name.
     const [firstName, ...rest] = fullName.trim().split(' ')
@@ -34,11 +40,15 @@ export default function RegisterPage() {
 
     setSubmitting(true)
     try {
-      await register({ email, password, firstName, lastName, phone })
+      await register({ email, password, firstName, lastName, phone: phone ? `+63${phone}` : '' })
       navigate('/')
     } catch (err) {
       const data = err.response?.data
-      const message = data?.email?.[0] || data?.detail || 'Could not create your account. Please try again.'
+      const message =
+        data?.email?.[0] ||
+        data?.phone?.[0] ||
+        data?.detail ||
+        'Could not create your account. Please try again.'
       setError(message)
     } finally {
       setSubmitting(false)
@@ -94,14 +104,21 @@ export default function RegisterPage() {
               <label htmlFor="phone" className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#16264c]">
                 <Phone className="h-4 w-4" /> Phone Number
               </label>
-              <input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-[#16264c] focus:outline-none focus:ring-1 focus:ring-[#16264c]"
-              />
+              <div className="flex">
+                <span className="flex items-center rounded-l-lg border border-r-0 border-gray-200 bg-gray-100 px-3 text-sm font-medium text-[#16264c]">
+                  +63
+                </span>
+                <input
+                  id="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="9171234567"
+                  value={phone}
+                  onChange={(e) => setPhone(toLocalDigits(e.target.value))}
+                  className="w-full rounded-r-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-[#16264c] focus:outline-none focus:ring-1 focus:ring-[#16264c]"
+                />
+              </div>
             </div>
 
             <div>

@@ -12,6 +12,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 
+from .validators import ph_mobile_validator
+
 
 class UserProfile(models.Model):
     """Extra fields for registered users beyond Django's default User model.
@@ -20,7 +22,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
-    phone = models.CharField(max_length=30, blank=True)
+    phone = models.CharField(max_length=30, blank=True, validators=[ph_mobile_validator])
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -240,7 +242,7 @@ class Reservation(models.Model):
     # Contact details — always filled, whether guest or registered user.
     guest_name = models.CharField(max_length=150)
     guest_email = models.EmailField()
-    guest_phone = models.CharField(max_length=30)
+    guest_phone = models.CharField(max_length=30, validators=[ph_mobile_validator])
 
     room_type = models.ForeignKey(RoomType, on_delete=models.PROTECT, related_name="reservations")
     num_rooms = models.PositiveIntegerField(default=1)
@@ -289,29 +291,29 @@ class Reservation(models.Model):
             raise ValidationError(errors)
 
     def clean_rooms(self):
-         """Checks that require a saved instance, since self.rooms is M2M.
-         Only call this after the reservation has a pk."""
-         errors = {}
-         if self.pk and self.check_in_date and self.check_out_date:
-             selected_rooms = self.rooms.all()
-             if selected_rooms.count() != self.num_rooms:
-                 errors["rooms"] = (
-                     f"You selected {selected_rooms.count()} room(s) but num_rooms is {self.num_rooms}. "
-                     "These must match."
-                 )
-             for room in selected_rooms:
-                 if room.room_type_id != self.room_type_id:
-                     errors["rooms"] = f"Room {room.room_number} does not belong to the selected room type."
-                 elif not room.is_available_for_range(self.check_in_date, self.check_out_date, exclude_reservation_id=self.pk):
-                     errors.setdefault("rooms", f"Room {room.room_number} is no longer available for these dates.")
-         if errors:
-          raise ValidationError(errors)
+        """Checks that require a saved instance, since self.rooms is M2M.
+        Only call this after the reservation has a pk."""
+        errors = {}
+        if self.pk and self.check_in_date and self.check_out_date:
+            selected_rooms = self.rooms.all()
+            if selected_rooms.count() != self.num_rooms:
+                errors["rooms"] = (
+                    f"You selected {selected_rooms.count()} room(s) but num_rooms is {self.num_rooms}. "
+                    "These must match."
+                )
+            for room in selected_rooms:
+                if room.room_type_id != self.room_type_id:
+                    errors["rooms"] = f"Room {room.room_number} does not belong to the selected room type."
+                elif not room.is_available_for_range(self.check_in_date, self.check_out_date, exclude_reservation_id=self.pk):
+                    errors.setdefault("rooms", f"Room {room.room_number} is no longer available for these dates.")
+        if errors:
+            raise ValidationError(errors)
 
     def clean(self):
         """Full verification - called by Django Admin (ModelForm) after save."""
         self.clean_dates_and_quantity()
         self.clean_rooms()
-                
+
     def _generate_code(self):
         return uuid.uuid4().hex[:8].upper()
 

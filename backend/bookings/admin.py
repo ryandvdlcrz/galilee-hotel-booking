@@ -1,15 +1,48 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
+from .validators import normalize_ph_mobile
 from datetime import timedelta
 from django.utils import timezone
+
+
+class UserProfileForm(forms.ModelForm):
+    phone = forms.CharField(
+        max_length=30,
+        required=False,
+        help_text="Accepts 9171234567, 09171234567, or +639171234567. Saved as +639XXXXXXXXX.",
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
+
+    def clean_phone(self):
+        value = self.cleaned_data.get("phone", "")
+        return normalize_ph_mobile(value) if value else value
+
+
+class ReservationAdminForm(forms.ModelForm):
+    guest_phone = forms.CharField(
+        max_length=30,
+        help_text="Accepts 9171234567, 09171234567, or +639171234567. Saved as +639XXXXXXXXX.",
+    )
+
+    class Meta:
+        model = Reservation
+        fields = "__all__"
+
+    def clean_guest_phone(self):
+        return normalize_ph_mobile(self.cleaned_data["guest_phone"])
 
 
 class UserProfileInline(admin.StackedInline):
     """Shows phone number directly on the User edit page in Django Admin."""
     model = UserProfile
+    form = UserProfileForm
     can_delete = False
     extra = 0
 
@@ -63,6 +96,7 @@ class PromoAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
+    form = ReservationAdminForm
     list_display = (
         "reservation_code",
         "guest_name",
