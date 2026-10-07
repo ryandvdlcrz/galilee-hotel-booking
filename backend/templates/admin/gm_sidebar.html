@@ -1,9 +1,17 @@
+{% load static %}
 <aside class="gm-sidebar" aria-label="Main navigation">
-  <div class="gm-sidebar-inner">
-    <p class="gm-label">Management</p>
+  <a href="{% url 'admin:index' %}" class="gm-brand">
+    <img src="{% static 'images/galilee-logo.jpg' %}" alt="Galilee Mansion">
+    <span>
+      <strong>Galilee Mansion</strong>
+      <small>STAFF PORTAL</small>
+    </span>
+  </a>
+
+  <div class="gm-scroll">
     <nav class="gm-nav">
       {% url 'admin:index' as gm_index_url %}
-      <a class="gm-link{% if request.path == gm_index_url %} is-active{% endif %}" href="{{ gm_index_url }}">Dashboard</a>
+      <a class="gm-link gm-m-dashboard{% if request.path == gm_index_url %} is-active{% endif %}" href="{{ gm_index_url }}">Dashboard</a>
     </nav>
 
     <div class="gm-apps">
@@ -20,20 +28,19 @@
         </div>
       {% endfor %}
     </div>
+  </div>
 
-    <div class="gm-account">
-      <p class="gm-label">Account</p>
-      {% if site_url %}
-        <a class="gm-link gm-small" href="{{ site_url }}" target="_blank" rel="noopener">View website</a>
-      {% endif %}
-      <span class="gm-user">{% firstof user.get_short_name user.get_username %}</span>
-      {% if user.has_usable_password %}
-        <a class="gm-link gm-small" href="{% url 'admin:password_change' %}">Change password</a>
-      {% endif %}
-      <form method="post" action="{% url 'admin:logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="gm-link gm-small">Sign out</button>
-      </form>
-    </div>
+  <div class="gm-account">
+    <span class="gm-user">{% firstof user.get_short_name user.get_username %}</span>
+    {% if site_url %}
+      <a class="gm-link gm-small" href="{{ site_url }}" target="_blank" rel="noopener">View website</a>
+    {% endif %}
+    {% if user.has_usable_password %}
+      <a class="gm-link gm-small" href="{% url 'admin:password_change' %}">Change password</a>
+    {% endif %}
+    <form method="post" action="{% url 'admin:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="gm-link gm-small gm-logout">Logout</button>
+    </form>
   </div>
 </aside>

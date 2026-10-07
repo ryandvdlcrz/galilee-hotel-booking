@@ -1,48 +1,17 @@
-from django import forms
+from datetime import timedelta
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from django.utils.html import format_html
-from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
-from .validators import normalize_ph_mobile
-from datetime import timedelta
 from django.utils import timezone
+from django.utils.html import format_html
 
-
-class UserProfileForm(forms.ModelForm):
-    phone = forms.CharField(
-        max_length=30,
-        required=False,
-        help_text="Accepts 9171234567, 09171234567, or +639171234567. Saved as +639XXXXXXXXX.",
-    )
-
-    class Meta:
-        model = UserProfile
-        fields = "__all__"
-
-    def clean_phone(self):
-        value = self.cleaned_data.get("phone", "")
-        return normalize_ph_mobile(value) if value else value
-
-
-class ReservationAdminForm(forms.ModelForm):
-    guest_phone = forms.CharField(
-        max_length=30,
-        help_text="Accepts 9171234567, 09171234567, or +639171234567. Saved as +639XXXXXXXXX.",
-    )
-
-    class Meta:
-        model = Reservation
-        fields = "__all__"
-
-    def clean_guest_phone(self):
-        return normalize_ph_mobile(self.cleaned_data["guest_phone"])
+from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
 
 
 class UserProfileInline(admin.StackedInline):
     """Shows phone number directly on the User edit page in Django Admin."""
     model = UserProfile
-    form = UserProfileForm
     can_delete = False
     extra = 0
 
@@ -66,10 +35,12 @@ class RoomImageInline(admin.TabularInline):
     model = RoomImage
     extra = 1
 
+
 class RoomInLine(admin.TabularInline):
     """Let staff add/manage individual room numbers directly from the RoomType edit page."""
     model = Room
     extra = 1
+
 
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
@@ -80,11 +51,13 @@ class RoomTypeAdmin(admin.ModelAdmin):
     filter_horizontal = ("amenities",)
     inlines = [RoomImageInline, RoomInLine]
 
+
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ("room_number", "room_type", "is_active")
     list_filter = ("room_type", "is_active")
     search_fields = ("room_number",)
+
 
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
@@ -96,7 +69,6 @@ class PromoAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    form = ReservationAdminForm
     list_display = (
         "reservation_code",
         "guest_name",
@@ -104,11 +76,10 @@ class ReservationAdmin(admin.ModelAdmin):
         "check_in_date",
         "check_out_date",
         "num_rooms",
-        "booked_on",
         "status_badge",
         "total_price",
     )
-    list_filter = ("status", "room_type", "check_in_date", "created_at")
+    list_filter = ("status", "room_type", "check_in_date")
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
     readonly_fields = ("reservation_code", "total_price", "created_at", "updated_at")
     date_hierarchy = "check_in_date"
@@ -131,17 +102,6 @@ class ReservationAdmin(admin.ModelAdmin):
             fg, bg, obj.get_status_display(),
         )
 
-    @admin.display(description="Booked on", ordering="created_at")
-    def booked_on(self, obj):
-        return timezone.localtime(obj.created_at).strftime("%b %d, %Y %I:%M %p")
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        # Replaces the blank "---------" option with a clearer label
-        # for walk-in guests who don't have an account.
-        if db_field.name == "user":
-            kwargs["empty_label"] = "Guest (walk-in, no account)"
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
     fieldsets = (
         ("Reservation", {
             "fields": (("reservation_code", "status"), "user")
@@ -150,24 +110,28 @@ class ReservationAdmin(admin.ModelAdmin):
             "fields": ("guest_name", ("guest_email", "guest_phone"))
         }),
         ("Booking details", {
-            "fields": ("room_type", ("num_rooms", "num_guests"), "rooms", ("check_in_date", "check_out_date"), "special_requests")
+            "fields": (
+                "room_type",
+                ("num_rooms", "num_guests"),
+                "rooms",
+                ("check_in_date", "check_out_date"),
+                "special_requests",
+            )
         }),
         ("Pricing", {
             "fields": ("total_price",)
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
         }),
     )
 
 
 # ---------------------------------------------------------------------------
-# Admin dashboard: adds summary stats to the top of the Django Admin
-# index page (checked-in guests, room availability today, etc).
-# See backend/templates/admin/index.html for the template that renders this.
+# Admin dashboard: summary stats, recent reservations, and per-room status
+# for the Django Admin index page. See templates/admin/index.html.
 # ---------------------------------------------------------------------------
-
-
 
 _original_index = admin.site.index
 
@@ -175,7 +139,7 @@ _original_index = admin.site.index
 def dashboard_index(request, extra_context=None):
     extra_context = extra_context or {}
 
-    today = timezone.localdate()
+    today = timezone.now().date()
     tomorrow = today + timedelta(days=1)
 
     room_types = list(RoomType.objects.filter(is_active=True))
@@ -198,6 +162,44 @@ def dashboard_index(request, extra_context=None):
 
     occupied_today = total_rooms - available_today
 
+    # Latest reservations for the "Recent Activity" card
+    recent_reservations = list(
+        Reservation.objects.select_related("room_type").order_by("-created_at")[:5]
+    )
+
+    # Per-room status tonight for the "Quick Room Status" card
+    occupied_ids, reserved_ids = set(), set()
+    tonight = Reservation.objects.filter(
+        status__in=[
+            Reservation.Status.PENDING,
+            Reservation.Status.CONFIRMED,
+            Reservation.Status.CHECKED_IN,
+        ],
+        check_in_date__lt=tomorrow,
+        check_out_date__gt=today,
+    ).prefetch_related("rooms")
+    for res in tonight:
+        ids = {room.id for room in res.rooms.all()}
+        if res.status == Reservation.Status.CHECKED_IN:
+            occupied_ids |= ids
+        else:
+            reserved_ids |= ids
+
+    room_grid = []
+    rooms_qs = Room.objects.filter(is_active=True, room_type__is_active=True).select_related("room_type")
+    for room in rooms_qs:
+        if room.id in occupied_ids:
+            state = "occupied"
+        elif room.id in reserved_ids:
+            state = "reserved"
+        else:
+            state = "available"
+        room_grid.append({
+            "number": room.room_number,
+            "type": room.room_type.name,
+            "state": state,
+        })
+
     extra_context["dashboard_stats"] = {
         "checked_in": Reservation.objects.filter(status=Reservation.Status.CHECKED_IN).count(),
         "pending": Reservation.objects.filter(status=Reservation.Status.PENDING).count(),
@@ -213,38 +215,8 @@ def dashboard_index(request, extra_context=None):
         "occupied_today": occupied_today,
         "per_room_type": per_room_type,
     }
-
-    # Check-out reminders: only guests who are currently checked in
-    def checked_in_with(**filters):
-        return list(
-            Reservation.objects
-            .filter(status=Reservation.Status.CHECKED_IN, **filters)
-            .select_related("room_type")
-            .order_by("check_out_date", "guest_name")
-        )
-
-    checkout_reminders = [
-        {
-            "label": "Overdue",
-            "color": "#dc2626",
-            "bg": "#fef2f2",
-            "reservations": checked_in_with(check_out_date__lt=today),
-        },
-        {
-            "label": "Check-out today",
-            "color": "#b45309",
-            "bg": "#fffbeb",
-            "reservations": checked_in_with(check_out_date=today),
-        },
-        {
-            "label": "Check-out tomorrow",
-            "color": "#16264c",
-            "bg": "#f1f5f9",
-            "reservations": checked_in_with(check_out_date=tomorrow),
-        },
-    ]
-    extra_context["checkout_reminders"] = checkout_reminders
-    extra_context["has_checkout_reminders"] = any(g["reservations"] for g in checkout_reminders)
+    extra_context["recent_reservations"] = recent_reservations
+    extra_context["room_grid"] = room_grid
 
     return _original_index(request, extra_context)
 

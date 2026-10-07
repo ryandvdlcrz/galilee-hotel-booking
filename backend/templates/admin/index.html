@@ -1,106 +1,154 @@
 {% extends "admin/index.html" %}
 
+{% block coltype %}colM{% endblock %}
 {% block content_title %}{% endblock %}
-
+{% block sidebar %}{% endblock %}
 {% block nav-sidebar %}{% include "admin/gm_sidebar.html" %}{% endblock %}
 
 {% block content %}
 
-<div class="gm-hero">
-  <div>
-    <p class="gm-eyebrow">Galilee Mansion · Staff Portal</p>
-    <h2>Welcome back, {% firstof user.get_short_name user.get_username %}</h2>
-    <p>Manage reservations, rooms, promos, amenities, and guest accounts.</p>
-  </div>
-  {% if perms.bookings.add_reservation %}
-    <a class="gm-btn" href="{% url 'admin:bookings_reservation_add' %}">New reservation</a>
-  {% endif %}
-</div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;">
-
-  <div style="background:#16264c;color:#fff;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.8;">Checked In</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;">{{ dashboard_stats.checked_in }}</p>
-  </div>
-
-  <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;">Pending Confirmation</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;color:#b45309;">{{ dashboard_stats.pending }}</p>
-  </div>
-
-  <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;">Confirmed</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;color:#15803d;">{{ dashboard_stats.confirmed }}</p>
-  </div>
-
-  <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;">Check-ins Today</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;">{{ dashboard_stats.checkins_today }}</p>
-  </div>
-
-  <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;">Check-outs Today</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;">{{ dashboard_stats.checkouts_today }}</p>
-  </div>
-
-  <div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;">
-    <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#888;">Rooms Available Today</p>
-    <p style="margin:6px 0 0;font-size:28px;font-weight:bold;color:#a6842f;">
-      {{ dashboard_stats.available_today }} <span style="font-size:14px;color:#888;font-weight:normal;">/ {{ dashboard_stats.total_rooms }}</span>
-    </p>
-  </div>
-
-</div>
-
-<div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
-  <p style="margin:0 0 12px;font-size:13px;font-weight:bold;color:#16264c;">Check-out Reminders</p>
-
-  {% for group in checkout_reminders %}
-    {% if group.reservations %}
-    <div style="border-left:4px solid {{ group.color }};background:{{ group.bg }};border-radius:4px;padding:10px 12px;margin-bottom:10px;">
-      <p style="margin:0 0 6px;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;color:{{ group.color }};">
-        {{ group.label }} ({{ group.reservations|length }})
-      </p>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        {% for r in group.reservations %}
-        <tr style="border-top:1px solid rgba(0,0,0,.06);">
-          <td style="padding:6px 4px;font-weight:bold;">{{ r.reservation_code }}</td>
-          <td style="padding:6px 4px;">{{ r.guest_name }}</td>
-          <td style="padding:6px 4px;color:#666;">{{ r.room_type.name }}</td>
-          <td style="padding:6px 4px;color:#666;">Out: {{ r.check_out_date|date:"M d" }}</td>
-          <td style="padding:6px 4px;text-align:right;">
-            <a href="{% url 'admin:bookings_reservation_change' r.pk %}" style="color:#a6842f;font-weight:bold;">Open</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+<div class="gm-stats">
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Checked In</p>
+      <p class="gm-stat-value">{{ dashboard_stats.checked_in }}</p>
     </div>
-    {% endif %}
-  {% endfor %}
+    <span class="gm-ico-badge gm-tone-blue" style="--ico: var(--i-usercheck)"></span>
+  </div>
 
-  {% if not has_checkout_reminders %}
-    <p style="margin:0;font-size:13px;color:#888;">No guests due to check out today or tomorrow.</p>
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Pending Confirmation</p>
+      <p class="gm-stat-value">{{ dashboard_stats.pending }}</p>
+    </div>
+    <span class="gm-ico-badge gm-tone-amber" style="--ico: var(--i-clock)"></span>
+  </div>
+
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Confirmed</p>
+      <p class="gm-stat-value">{{ dashboard_stats.confirmed }}</p>
+    </div>
+    <span class="gm-ico-badge gm-tone-green" style="--ico: var(--i-check)"></span>
+  </div>
+
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Check-ins Today</p>
+      <p class="gm-stat-value">{{ dashboard_stats.checkins_today }}</p>
+    </div>
+    <span class="gm-ico-badge gm-tone-navy" style="--ico: var(--i-login)"></span>
+  </div>
+
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Check-outs Today</p>
+      <p class="gm-stat-value">{{ dashboard_stats.checkouts_today }}</p>
+    </div>
+    <span class="gm-ico-badge gm-tone-navy" style="--ico: var(--i-logout)"></span>
+  </div>
+
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Rooms Available Today</p>
+      <p class="gm-stat-value">{{ dashboard_stats.available_today }} <small>/ {{ dashboard_stats.total_rooms }}</small></p>
+    </div>
+    <span class="gm-ico-badge gm-tone-gold" style="--ico: var(--i-bed)"></span>
+  </div>
+
+  <div class="gm-stat">
+    <div>
+      <p class="gm-stat-label">Room Occupancy</p>
+      <p class="gm-stat-value">{% widthratio dashboard_stats.occupied_today dashboard_stats.total_rooms 100 %}%</p>
+    </div>
+    <span class="gm-ico-badge gm-tone-blue" style="--ico: var(--i-percent)"></span>
+  </div>
+</div>
+
+<div class="gm-dash-grid">
+
+  {% if perms.bookings.view_reservation or perms.bookings.change_reservation %}
+  <div class="gm-card">
+    <div class="gm-card-head">
+      <h3>Recent Activity</h3>
+      <div class="gm-head-actions">
+        {% if perms.bookings.add_reservation %}
+          <a class="gm-btn" href="{% url 'admin:bookings_reservation_add' %}">New reservation</a>
+        {% endif %}
+        <a href="{% url 'admin:bookings_reservation_changelist' %}">View all</a>
+      </div>
+    </div>
+    <table class="gm-table">
+      <thead>
+        <tr>
+          <th>Guest name</th>
+          <th>Room type</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent_reservations %}
+        <tr>
+          <td><strong>{{ r.guest_name }}</strong></td>
+          <td>{{ r.room_type.name }}</td>
+          <td>₱{{ r.total_price|floatformat:"2g" }}</td>
+          <td><span class="gm-badge gm-badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
+          <td class="gm-actions"><a class="gm-eye" href="{% url 'admin:bookings_reservation_change' r.pk %}" title="Open reservation"></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="gm-empty-cell">No reservations yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% endif %}
+
+  <div class="gm-card">
+    <div class="gm-card-head gm-stack">
+      <h3>Quick Room Status</h3>
+      <div class="gm-legend">
+        <span class="gm-dot-available">Available</span>
+        <span class="gm-dot-reserved">Reserved</span>
+        <span class="gm-dot-occupied">Occupied</span>
+      </div>
+    </div>
+    <div class="gm-room-grid">
+      {% for room in room_grid %}
+        <div class="gm-room">
+          <strong>{{ room.number }}</strong>
+          <span class="gm-badge gm-badge-{{ room.state }}">{{ room.state|capfirst }}</span>
+          <small>{{ room.type }}</small>
+        </div>
+      {% empty %}
+        <p class="gm-empty">No rooms yet. Add room numbers under Room types.</p>
+      {% endfor %}
+    </div>
+  </div>
+
 </div>
 
 {% if dashboard_stats.per_room_type %}
-<div style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:28px;">
-  <p style="margin:0 0 10px;font-size:13px;font-weight:bold;color:#16264c;">Availability by Room Type (Today)</p>
-  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+<div class="gm-card">
+  <div class="gm-card-head">
+    <h3>Availability by Room Type</h3>
+    <span class="gm-muted">Tonight</span>
+  </div>
+  <table class="gm-table">
     <thead>
-      <tr style="text-align:left;color:#888;border-bottom:1px solid #eee;">
-        <th style="padding:6px 4px;">Room Type</th>
-        <th style="padding:6px 4px;text-align:right;">Available</th>
-        <th style="padding:6px 4px;text-align:right;">Total</th>
+      <tr>
+        <th>Room type</th>
+        <th class="gm-num">Available</th>
+        <th class="gm-num">Total</th>
       </tr>
     </thead>
     <tbody>
       {% for rt in dashboard_stats.per_room_type %}
-      <tr style="border-bottom:1px solid #f5f5f5;">
-        <td style="padding:6px 4px;">{{ rt.name }}</td>
-        <td style="padding:6px 4px;text-align:right;{% if rt.available == 0 %}color:#dc2626;font-weight:bold;{% endif %}">{{ rt.available }}</td>
-        <td style="padding:6px 4px;text-align:right;color:#888;">{{ rt.total }}</td>
+      <tr>
+        <td>{{ rt.name }}</td>
+        <td class="gm-num{% if rt.available == 0 %} gm-danger{% endif %}">{{ rt.available }}</td>
+        <td class="gm-num gm-muted">{{ rt.total }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -108,24 +156,4 @@
 </div>
 {% endif %}
 
-<div class="gm-quick">
-  <div class="gm-quick-head">
-    <div>
-      <p class="gm-eyebrow">Hotel management</p>
-      <h3>Quick access</h3>
-    </div>
-    <span>Choose an area to manage</span>
-  </div>
-  <div class="gm-quick-grid">
-    {% for app in app_list %}{% for model in app.models %}
-      <div class="gm-quick-card">
-        <h4>{{ model.name }}</h4>
-        <div class="gm-quick-actions">
-          {% if model.admin_url %}<a href="{{ model.admin_url }}">View</a>{% endif %}
-          {% if model.add_url %}<a href="{{ model.add_url }}">+ Add</a>{% endif %}
-        </div>
-      </div>
-    {% endfor %}{% endfor %}
-  </div>
-</div>
 {% endblock %}
