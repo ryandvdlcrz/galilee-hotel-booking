@@ -78,30 +78,32 @@
         <a href="{% url 'admin:bookings_reservation_changelist' %}">View all</a>
       </div>
     </div>
-    <table class="gm-table">
-      <thead>
-        <tr>
-          <th>Guest name</th>
-          <th>Room type</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in recent_reservations %}
-        <tr>
-          <td><strong>{{ r.guest_name }}</strong></td>
-          <td>{{ r.room_type.name }}</td>
-          <td>₱{{ r.total_price|floatformat:"2g" }}</td>
-          <td><span class="gm-badge gm-badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
-          <td class="gm-actions"><a class="gm-eye" href="{% url 'admin:bookings_reservation_change' r.pk %}" title="Open reservation"></a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5" class="gm-empty-cell">No reservations yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="gm-table-wrap">
+      <table class="gm-table">
+        <thead>
+          <tr>
+            <th>Guest name</th>
+            <th>Room type</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent_reservations %}
+          <tr>
+            <td><strong>{{ r.guest_name }}</strong></td>
+            <td>{{ r.room_type.name }}</td>
+            <td>₱{{ r.total_price|floatformat:"2g" }}</td>
+            <td><span class="gm-badge gm-badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
+            <td class="gm-actions"><a class="gm-eye" href="{% url 'admin:bookings_reservation_change' r.pk %}" title="Open reservation"></a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="gm-empty-cell">No reservations yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
   {% endif %}
 
@@ -128,32 +130,5 @@
   </div>
 
 </div>
-
-{% if dashboard_stats.per_room_type %}
-<div class="gm-card">
-  <div class="gm-card-head">
-    <h3>Availability by Room Type</h3>
-    <span class="gm-muted">Tonight</span>
-  </div>
-  <table class="gm-table">
-    <thead>
-      <tr>
-        <th>Room type</th>
-        <th class="gm-num">Available</th>
-        <th class="gm-num">Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for rt in dashboard_stats.per_room_type %}
-      <tr>
-        <td>{{ rt.name }}</td>
-        <td class="gm-num{% if rt.available == 0 %} gm-danger{% endif %}">{{ rt.available }}</td>
-        <td class="gm-num gm-muted">{{ rt.total }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% endif %}
 
 {% endblock %}

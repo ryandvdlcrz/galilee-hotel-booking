@@ -137,8 +137,7 @@ a.gm-btn:link, a.gm-btn:visited, .gm-head-actions a.gm-btn:link, .gm-head-action
 a.gm-btn:hover { background: #8c6e26; color: #fff; }
 
 .gm-table { width: 100%; border-collapse: collapse; }
-.gm-table th { padding: 10px 24px; background: #faf7f0; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; text-align: left; color: #6b7280; }
-.gm-table td { padding: 16px 24px; border-bottom: 1px solid #f1ead8; font-size: 13px; color: #16264c; vertical-align: middle; }
+.gm-table th { position: sticky; top: 0; z-index: 1; padding: 10px 24px; background: #faf7f0; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; text-align: left; color: #6b7280; }.gm-table td { padding: 16px 24px; border-bottom: 1px solid #f1ead8; font-size: 13px; color: #16264c; vertical-align: middle; }
 .gm-table tr:last-child td { border-bottom: 0; }
 .gm-table .gm-num { text-align: right; }
 .gm-empty-cell { text-align: center; color: #6b7280; }
@@ -161,8 +160,7 @@ a.gm-eye:hover { background: #f1ead8; color: #16264c; }
 .gm-dot-reserved { --dot: #d97706; }
 .gm-dot-occupied { --dot: #dc2626; }
 
-.gm-room-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-height: 560px; padding: 18px 24px 24px; border-top: 1px solid #e6dfcc; overflow-y: auto; }
-.gm-room { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; text-align: center; background: #faf7f0; border: 1px solid #eee7d3; border-radius: 12px; }
+.gm-room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; align-content: start; max-height: 560px; padding: 18px 24px 24px; border-top: 1px solid #e6dfcc; overflow-y: auto; }.gm-room { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; text-align: center; background: #faf7f0; border: 1px solid #eee7d3; border-radius: 12px; }
 .gm-room strong { font-size: 22px; color: #16264c; }
 .gm-room small { font-size: 11px; color: #6b7280; }
 .gm-empty { grid-column: 1 / -1; margin: 0; font-size: 13px; text-align: center; color: #6b7280; }
@@ -193,6 +191,23 @@ input[type=url]:focus, input[type=tel]:focus, input[type=date]:focus, textarea:f
 
 /* Reservation form: hide edit/add/delete/view icons beside User and Room type */
 body.model-reservation .related-widget-wrapper-link { display: none; }
+
+
+/* ================= Dashboard fits the screen (large screens only) ================= */
+@media (min-width: 1101px) {
+  body.dashboard { height: 100vh; height: 100dvh; overflow: hidden; }
+  body.dashboard #container { height: 100vh; height: 100dvh; }
+  body.dashboard .main { flex: 1 1 0; min-height: 0; }
+  body.dashboard .main > .content { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  body.dashboard #content { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 20px 32px 24px; }
+  body.dashboard #content > br.clear { display: none; }
+  body.dashboard .gm-stats { flex: none; margin-bottom: 20px; }
+  body.dashboard .gm-dash-grid { flex: 1; min-height: 0; margin-bottom: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+  body.dashboard .gm-card { display: flex; flex-direction: column; min-height: 0; }
+  body.dashboard .gm-card-head { flex: none; }
+  body.dashboard .gm-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+  body.dashboard .gm-room-grid { flex: 1; min-height: 0; max-height: none; }
+}
 
 /* ================= Smaller screens ================= */
 @media (max-width: 1100px) {
