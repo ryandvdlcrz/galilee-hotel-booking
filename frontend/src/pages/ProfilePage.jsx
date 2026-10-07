@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { changePasswordRequest, deleteAccountRequest } from '../api/auth'
+import { getMyReservations } from '../api/reservations'
+import { formatDate } from '../utils/formatDate'
+import { getBadge } from '../utils/reservationBadge'
 
 /* ---------- Icons (inline SVG, no extra dependency) ---------- */
 
@@ -67,6 +70,13 @@ const SaveIcon = (props) => (
     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
     <path d="M17 21v-8H7v8" />
     <path d="M7 3v5h8" />
+  </Icon>
+)
+const BanknoteIcon = (props) => (
+  <Icon {...props}>
+    <rect x="2" y="6" width="20" height="12" rx="2" />
+    <circle cx="12" cy="12" r="2" />
+    <path d="M6 12h.01M18 12h.01" />
   </Icon>
 )
 
@@ -351,6 +361,118 @@ function SecurityPanel() {
   )
 }
 
+function BookingsPanel() {
+  const navigate = useNavigate()
+  const [reservations, setReservations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let isMounted = true
+    getMyReservations()
+      .then((data) => {
+        if (isMounted) setReservations(data)
+      })
+      .catch(() => {
+        if (isMounted) setError('Could not load your bookings right now.')
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+    return () => { isMounted = false }
+  }, [])
+
+  function viewDetails(r) {
+    navigate('/booking/confirmation', {
+      state: {
+        reservation: r,
+        fromHistory: true,
+        room: {
+          name: r.room_type_name,
+          images: r.room_type_image ? [{ image: r.room_type_image, is_primary: true }] : [],
+        },
+      },
+    })
+  }
+
+  if (loading) return <p className="mt-10 text-sm text-gray-500">Loading your bookings…</p>
+  if (error) return <p className="mt-10 text-sm text-red-600">{error}</p>
+
+  if (reservations.length === 0) {
+    return (
+      <div className="mt-10 max-w-4xl rounded-2xl bg-white p-10 text-center shadow-sm">
+        <p className="text-sm text-gray-500">You don't have any bookings yet.</p>
+        <Link to="/rooms" className={`${primaryButton} mt-4`}>
+          Browse Rooms
+        </Link>
+      </div>
+    )
+  }
+
+  const sorted = [...reservations].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date))
+
+  return (
+    <div className="mt-10 max-w-4xl space-y-6">
+      {sorted.map((r) => {
+        const badge = getBadge(r)
+        const cancelled = r.status === 'cancelled'
+
+        return (
+          <div key={r.id} className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm sm:flex-row">
+            <div className="relative h-48 bg-gray-100 sm:h-auto sm:w-72 sm:shrink-0">
+              {r.room_type_image ? (
+                <img src={r.room_type_image} alt={r.room_type_name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                  No image yet
+                </div>
+              )}
+              <span
+                className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}
+              >
+                {badge.label}
+              </span>
+            </div>
+
+            <div className="flex flex-1 flex-col justify-center p-6">
+              <h3 className={`text-xl font-bold ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
+                {r.room_type_name}
+              </h3>
+
+              <p className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                <CalendarIcon className="h-4 w-4" />
+                {formatDate(r.check_in_date)} - {formatDate(r.check_out_date)}
+              </p>
+
+              <p
+                className={`mt-2 flex items-center gap-2 text-sm ${
+                  cancelled ? 'text-gray-400 line-through' : 'text-gray-600'
+                }`}
+              >
+                <BanknoteIcon className="h-4 w-4" />
+                <span>
+                  Total:{' '}
+                  <span className={cancelled ? '' : 'font-semibold text-[#a6842f]'}>
+                    ₱{Number(r.total_price).toLocaleString()}
+                  </span>
+                </span>
+              </p>
+
+              <button
+                type="button"
+                onClick={() => viewDetails(r)}
+                className={`${secondaryButton} mt-5 w-fit`}
+              >
+                View Details
+              </button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function NotificationsPanel() {
   return (
     <Card icon={<BellIcon className="h-5 w-5" />} title="Notifications">
@@ -366,6 +488,10 @@ const PAGE_COPY = {
     title: 'Personal Information',
     subtitle: 'Update your personal details and contact information here.',
   },
+  bookings: {
+    title: 'My Booking History',
+    subtitle: 'View and manage your upcoming and past reservations.',
+  },
   security: {
     title: 'Account Security',
     subtitle: 'Manage your password and protect your account.',
@@ -376,10 +502,10 @@ const PAGE_COPY = {
   },
 }
 
-export default function ProfilePage() {
+export default function ProfilePage({ initialTab = 'info' }) {
   const { user, loading, logout } = useAuth()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('info')
+  const [tab, setTab] = useState(initialTab)
 
   if (loading) return <p className="py-20 text-center text-sm text-gray-500">Loading…</p>
   if (!user) return <Navigate to="/login" replace />
@@ -406,7 +532,10 @@ export default function ProfilePage() {
               Personal Info
             </button>
 
-            <Link to="/my-reservations" className={`${sidebarItemBase} ${sidebarItemIdle}`}>
+            <Link
+              to="/my-reservations"
+              className={`${sidebarItemBase} ${tab === 'bookings' ? sidebarItemActive : sidebarItemIdle}`}
+            >
               <CalendarIcon className="h-5 w-5" />
               My Bookings
             </Link>
@@ -448,6 +577,7 @@ export default function ProfilePage() {
           <p className="mt-2 text-sm text-gray-600 md:text-base">{copy.subtitle}</p>
 
           {tab === 'info' && <PersonalInfoPanel user={user} />}
+          {tab === 'bookings' && <BookingsPanel />}
           {tab === 'security' && <SecurityPanel />}
           {tab === 'notifications' && <NotificationsPanel />}
         </main>

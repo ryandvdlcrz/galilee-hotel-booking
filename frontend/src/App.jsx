@@ -9,7 +9,6 @@ import RegisterPage from './pages/RegisterPage'
 import RoomDetailPage from './pages/RoomDetailPage'
 import BookingCheckoutPage from './pages/BookingCheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
-import MyReservationsPage from './pages/MyReservationsPage'
 import OffersPage from './pages/OffersPage'
 import ContactPage from './pages/ContactPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -29,12 +28,19 @@ function App() {
         <Route path="/rooms/:slug" element={<RoomDetailPage />} />
         <Route path="/booking/checkout" element={<BookingCheckoutPage />} />
         <Route path="/booking/confirmation" element={<BookingConfirmationPage />} />
-        <Route path="/my-reservations" element={<MyReservationsPage />} />
+        <Route
+          path="/my-reservations"
+          element={
+            <Suspense fallback={<p className="py-20 text-center text-sm text-gray-500">Loading…</p>}>
+              <ProfilePage key="bookings" initialTab="bookings" />
+            </Suspense>
+          }
+        />
         <Route
           path="/profile"
           element={
             <Suspense fallback={<p className="py-20 text-center text-sm text-gray-500">Loading…</p>}>
-              <ProfilePage />
+              <ProfilePage key="info" />
             </Suspense>
           }
         />

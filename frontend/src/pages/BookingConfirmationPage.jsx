@@ -1,21 +1,14 @@
 import { useState } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
-import { CheckCircle2, Calendar, Users, Phone, Mail, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, XCircle, Calendar, Users, Phone, Mail, ArrowLeft } from 'lucide-react'
 import { cancelReservation } from '../api/reservations'
 import { formatDate, nightsBetween } from '../utils/formatDate'
 import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
+import { getBadge } from '../utils/reservationBadge'
 
 // Display-only for now — matches the amount shown at checkout, but not
 // yet part of the backend's actual stored total_price. See BookingCheckoutPage.
 const RESORT_FEE_DISPLAY = 500
-
-const STATUS_STYLES = {
-  pending: { label: 'Pending Confirmation', className: 'bg-amber-100 text-amber-700' },
-  confirmed: { label: 'Confirmed', className: 'bg-green-100 text-green-700' },
-  checked_in: { label: 'Checked In', className: 'bg-blue-100 text-blue-700' },
-  checked_out: { label: 'Checked Out', className: 'bg-gray-100 text-gray-600' },
-  cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
-}
 
 export default function BookingConfirmationPage() {
   const location = useLocation()
@@ -29,6 +22,7 @@ export default function BookingConfirmationPage() {
   const room = state?.room
   const adults = state?.adults
   const children = state?.children
+  const fromHistory = Boolean(state?.fromHistory)
 
   if (!reservation) {
     // Someone navigated here directly without completing a booking.
@@ -41,8 +35,36 @@ export default function BookingConfirmationPage() {
   const extraGuestCount = reservation.extra_guest_count ?? 0
   const extraGuestFee = Number(reservation.extra_guest_fee_total ?? 0)
   const totalDisplay = Number(reservation.total_price) + RESORT_FEE_DISPLAY
-  const statusInfo = STATUS_STYLES[reservation.status] || STATUS_STYLES.pending
+  const badge = getBadge(reservation)
+  const isCancelled = reservation.status === 'cancelled'
+  const canCancel = ['pending', 'confirmed'].includes(reservation.status)
   const primaryImage = room?.images?.find((img) => img.is_primary) ?? room?.images?.[0]
+
+  // Heading changes with the situation: cancelled, opened from history, or just booked.
+  const header = isCancelled
+    ? {
+        Icon: XCircle,
+        wrap: 'bg-red-50',
+        color: 'text-red-600',
+        title: 'Reservation Cancelled',
+        text: 'This booking has been cancelled. We hope to welcome you at Galilee Wonderland another time.',
+      }
+    : fromHistory
+    ? {
+        Icon: CheckCircle2,
+        wrap: 'bg-green-50',
+        color: 'text-green-600',
+        title: 'Booking Details',
+        text: 'Review your reservation and manage your stay.',
+      }
+    : {
+        Icon: CheckCircle2,
+        wrap: 'bg-green-50',
+        color: 'text-green-600',
+        title: 'Reservation Confirmed!',
+        text: 'Thank you for choosing Galilee Wonderland. Your stay is officially booked.',
+      }
+  const HeaderIcon = header.Icon
 
   async function handleCancel() {
     if (!confirm('Are you sure you want to cancel this reservation? This cannot be undone.')) {
@@ -62,22 +84,16 @@ export default function BookingConfirmationPage() {
     }
   }
 
-  const canCancel = ['pending', 'confirmed'].includes(reservation.status)
-
   return (
     <div className="bg-[#faf7f0]">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        {/* Success header */}
+        {/* Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-            <CheckCircle2 className="h-9 w-9 text-green-600" />
+          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${header.wrap}`}>
+            <HeaderIcon className={`h-9 w-9 ${header.color}`} />
           </div>
-          <h1 className="mt-4 text-3xl font-bold text-[#16264c] sm:text-4xl">
-            Reservation Confirmed!
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Thank you for choosing Galilee Wonderland. Your stay is officially booked.
-          </p>
+          <h1 className="mt-4 text-3xl font-bold text-[#16264c] sm:text-4xl">{header.title}</h1>
+          <p className="mt-2 text-sm text-gray-500">{header.text}</p>
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -105,8 +121,8 @@ export default function BookingConfirmationPage() {
                     </p>
                     <p className="text-lg font-bold text-[#16264c]">#{reservation.reservation_code}</p>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusInfo.className}`}>
-                    {statusInfo.label}
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}>
+                    {badge.label}
                   </span>
                 </div>
 
@@ -157,8 +173,10 @@ export default function BookingConfirmationPage() {
                     <span>₱{RESORT_FEE_DISPLAY.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-bold text-[#16264c]">
-                    <span>Total Amount Paid</span>
-                    <span>₱{totalDisplay.toLocaleString()}</span>
+                    <span>{isCancelled ? 'Total Amount' : 'Total Amount Paid'}</span>
+                    <span className={isCancelled ? 'text-gray-400 line-through' : ''}>
+                      ₱{totalDisplay.toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
@@ -174,7 +192,9 @@ export default function BookingConfirmationPage() {
                   </button>
                 ) : (
                   <p className="mt-5 text-center text-xs text-gray-400">
-                    This reservation is {statusInfo.label.toLowerCase()} and can no longer be cancelled here.
+                    {isCancelled
+                      ? 'This reservation has been cancelled.'
+                      : `This reservation is ${badge.label.toLowerCase()} and can no longer be cancelled here.`}
                   </p>
                 )}
               </div>
@@ -183,26 +203,43 @@ export default function BookingConfirmationPage() {
 
           {/* Right: what's next + help */}
           <div className="space-y-4 lg:col-span-1">
-            <div className="rounded-xl bg-[#16264c] p-6 text-white">
-              <p className="font-semibold">What's Next?</p>
-              <div className="mt-3 flex gap-3 text-sm text-white/80">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">
-                  1
-                </span>
-                <span>Check your email for the digital voucher and QR code.</span>
+            {isCancelled ? (
+              <div className="rounded-xl bg-[#16264c] p-6 text-white">
+                <p className="font-semibold">Planning another stay?</p>
+                <p className="mt-3 text-sm text-white/80">
+                  You can book a new room anytime. Your cancelled booking stays in your history.
+                </p>
+                <Link
+                  to="/rooms"
+                  className="mt-4 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
+                >
+                  Browse Rooms
+                </Link>
               </div>
-              <Link
-                to="/my-reservations"
-                className="mt-4 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
-              >
-                Manage My Booking
-              </Link>
-            </div>
+            ) : (
+              <div className="rounded-xl bg-[#16264c] p-6 text-white">
+                <p className="font-semibold">What's Next?</p>
+                <div className="mt-3 flex gap-3 text-sm text-white/80">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">
+                    1
+                  </span>
+                  <span>Check your email for the digital voucher and QR code.</span>
+                </div>
+                <Link
+                  to="/my-reservations"
+                  className="mt-4 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
+                >
+                  Manage My Booking
+                </Link>
+              </div>
+            )}
 
-            <div className="rounded-xl bg-white p-4 text-xs text-gray-500 shadow-sm">
-              Free cancellation is available up to 48 hours before check-in. Please review our full
-              policy in your confirmation email.
-            </div>
+            {!isCancelled && (
+              <div className="rounded-xl bg-white p-4 text-xs text-gray-500 shadow-sm">
+                Free cancellation is available up to 48 hours before check-in. Please review our full
+                policy in your confirmation email.
+              </div>
+            )}
 
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <p className="font-semibold text-[#16264c]">Need Help?</p>
@@ -223,10 +260,10 @@ export default function BookingConfirmationPage() {
         </div>
 
         <Link
-          to="/"
+          to={fromHistory ? '/my-reservations' : '/'}
           className="mt-8 inline-flex items-center gap-2 rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-semibold text-[#16264c] hover:bg-gray-200"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Home
+          <ArrowLeft className="h-4 w-4" /> {fromHistory ? 'Back to My Bookings' : 'Back to Home'}
         </Link>
       </div>
     </div>

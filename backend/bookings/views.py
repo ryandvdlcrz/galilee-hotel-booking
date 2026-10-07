@@ -70,7 +70,11 @@ class MyReservationsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Reservation.objects.filter(user=self.request.user).select_related("room_type")
+        return (
+            Reservation.objects.filter(user=self.request.user)
+            .select_related("room_type")
+            .prefetch_related("room_type__images")
+        )
 
 
 class ReservationLookupView(APIView):

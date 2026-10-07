@@ -109,8 +109,7 @@ class RoomType(models.Model):
         return overlapping.aggregate(total=models.Sum("num_rooms"))["total"] or 0
 
     def available_rooms_for_range(self, check_in, check_out, exclude_reservation_id=None):
-        booked = self.rooms_booked_for_range(check_in, check_out, exclude_reservation_id)
-        return max(self.total_rooms - booked, 0)
+         return self.available_rooms_list(check_in, check_out, exclude_reservation_id).count()
 
     def available_rooms_list(self, check_in, check_out, exclude_reservation_id=None):
         """Return the queryset of specific Room instances of this type

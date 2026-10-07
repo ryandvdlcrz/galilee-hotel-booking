@@ -103,6 +103,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     the client."""
 
     room_type_name = serializers.CharField(source="room_type.name", read_only=True)
+    room_type_image = serializers.SerializerMethodField()
     base_room_cost = serializers.SerializerMethodField()
     extra_guest_count = serializers.SerializerMethodField()
     extra_guest_fee_total = serializers.SerializerMethodField()
@@ -119,6 +120,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             "reservation_code",
             "room_type",
             "room_type_name",
+            "room_type_image",
             "guest_name",
             "guest_email",
             "guest_phone",
@@ -149,6 +151,17 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def get_extra_guest_fee_total(self, obj):
         return obj.extra_guest_fee_total()
+
+    def get_room_type_image(self, obj):
+        images = list(obj.room_type.images.all())
+        if not images:
+            return None
+        primary = next((img for img in images if img.is_primary), images[0])
+        if not primary.image:
+            return None
+        request = self.context.get("request")
+        url = primary.image.url
+        return request.build_absolute_uri(url) if request else url
 
     def validate_guest_phone(self, value):
         return normalize_ph_mobile(value)
