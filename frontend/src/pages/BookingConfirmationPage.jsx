@@ -31,6 +31,7 @@ export default function BookingConfirmationPage() {
   }
 
   const nights = nightsBetween(reservation.check_in_date, reservation.check_out_date)
+  const numRooms = reservation.num_rooms ?? 1
   const baseRoomCost = Number(reservation.base_room_cost ?? reservation.total_price)
   const extraGuestCount = reservation.extra_guest_count ?? 0
   const extraGuestFee = Number(reservation.extra_guest_fee_total ?? 0)
@@ -159,7 +160,9 @@ export default function BookingConfirmationPage() {
                     Payment Summary
                   </p>
                   <div className="flex justify-between text-gray-600">
-                    <span>Room rate ({nights} nights)</span>
+                    <span>
+                      Room rate ({numRooms} room{numRooms > 1 ? 's' : ''} × {nights} night{nights !== 1 ? 's' : ''})
+                    </span>
                     <span>₱{baseRoomCost.toLocaleString()}</span>
                   </div>
                   {extraGuestCount > 0 && (

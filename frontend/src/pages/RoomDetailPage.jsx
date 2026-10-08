@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Wifi, Snowflake, Tv, Info, Clock, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { getRoomTypeBySlug, getRoomTypes } from '../api/rooms'
 import { nightsBetween } from '../utils/formatDate'
+import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 
 const AMENITY_ICONS = {
   wifi: Wifi,
@@ -11,7 +12,7 @@ const AMENITY_ICONS = {
   tv: Tv,
 }
 
-const CHECK_IN_OUT_POLICY = 'Check-in from 2:00 PM. Check-out by 12:00 PM. Late check-out subject to availability.'
+const CHECK_IN_OUT_POLICY = `Check-in from ${CHECK_IN_TIME}. Check-out by ${CHECK_OUT_TIME}. Late check-out subject to availability.`
 
 export default function RoomDetailPage() {
   const { slug } = useParams()
@@ -73,9 +74,10 @@ export default function RoomDetailPage() {
 
   const nights = nightsBetween(checkIn, checkOut)
   const totalGuests = adults + children
-  const includedGuests = room ? room.capacity : 0
+  const numRooms = Math.max(selectedRoomIds.length, 1)
+  const includedGuests = room ? room.capacity * numRooms : 0
   const extraGuests = Math.max(totalGuests - includedGuests, 0)
-  const baseRoomCost = room ? nights * Number(room.price_per_night) : 0
+  const baseRoomCost = room ? nights * numRooms * Number(room.price_per_night) : 0
   const extraGuestFee = room ? extraGuests * Number(room.extra_pax_fee) * nights : 0
   const total = baseRoomCost + extraGuestFee
 
@@ -111,6 +113,7 @@ export default function RoomDetailPage() {
         adults,
         children,
         roomIds: selectedRoomIds,
+        numRooms: selectedRoomIds.length,
       },
     })
   }
@@ -331,7 +334,9 @@ export default function RoomDetailPage() {
                 {nights > 0 && (
                   <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
                     <div className="flex justify-between text-gray-600">
-                      <span>₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}</span>
+                      <span>
+                        {numRooms} room{numRooms > 1 ? 's' : ''} × ₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
+                      </span>
                       <span>₱{baseRoomCost.toLocaleString()}</span>
                     </div>
                     {extraGuests > 0 && (

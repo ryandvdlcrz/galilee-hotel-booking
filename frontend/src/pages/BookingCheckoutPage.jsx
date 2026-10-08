@@ -52,10 +52,11 @@ export default function BookingCheckoutPage() {
 
   if (!bookingDetails) return null
 
-  const { checkIn, checkOut, adults, children } = bookingDetails
+  const { checkIn, checkOut, adults, children, roomIds } = bookingDetails
+  const numRooms = roomIds?.length || 1
   const nights = nightsBetween(checkIn, checkOut)
-  const subtotal = room ? Number(room.price_per_night) * nights : 0
-  const includedGuests = room ? room.capacity : 0
+  const subtotal = room ? Number(room.price_per_night) * numRooms * nights : 0
+  const includedGuests = room ? room.capacity * numRooms : 0
   const totalGuestCount = adults + children
   const extraGuests = Math.max(totalGuestCount - includedGuests, 0)
   const extraGuestFee = room ? extraGuests * Number(room.extra_pax_fee) * nights : 0
@@ -254,7 +255,9 @@ export default function BookingCheckoutPage() {
               {room && (
                 <div className="mt-4 space-y-1.5 border-t border-gray-100 pt-4 text-sm">
                   <div className="flex justify-between text-gray-600">
-                    <span>₱{Number(room.price_per_night).toLocaleString()} × {nights} nights</span>
+                    <span>
+                    {numRooms} room{numRooms > 1 ? 's' : ''} × ₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights !== 1 ? 's' : ''}
+                    </span>
                     <span>₱{subtotal.toLocaleString()}</span>
                   </div>
                   {extraGuests > 0 && (
