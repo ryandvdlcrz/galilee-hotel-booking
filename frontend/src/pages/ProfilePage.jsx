@@ -412,30 +412,39 @@ function BookingsPanel() {
   const sorted = [...reservations].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date))
 
   return (
-    <div className="mt-10 max-w-4xl space-y-6">
+    <div className="mt-10 max-w-4xl space-y-8">
       {sorted.map((r) => {
         const badge = getBadge(r)
         const cancelled = r.status === 'cancelled'
 
         return (
-          <div key={r.id} className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm sm:flex-row">
-            <div className="relative h-48 bg-gray-100 sm:h-auto sm:w-72 sm:shrink-0">
+          <div
+            key={r.id}
+            className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm sm:min-h-[234px] sm:flex-row"
+          >
+            {/* Image column: photo is absolute so it never sets the card height */}
+            <div className="relative h-48 shrink-0 bg-gray-100 sm:h-auto sm:w-[300px]">
               {r.room_type_image ? (
-                <img src={r.room_type_image} alt={r.room_type_name} className="h-full w-full object-cover" />
+                <img
+                  src={r.room_type_image}
+                  alt={r.room_type_name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
                   No image yet
                 </div>
               )}
               <span
-                className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}
+                className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}
               >
                 {badge.label}
               </span>
             </div>
 
-            <div className="flex flex-1 flex-col justify-center p-6">
-              <h3 className={`text-xl font-bold ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
+            {/* Text column */}
+            <div className="flex flex-1 flex-col justify-center px-8 py-6">
+              <h3 className={`text-2xl font-bold ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
                 {r.room_type_name}
               </h3>
 
@@ -461,7 +470,7 @@ function BookingsPanel() {
               <button
                 type="button"
                 onClick={() => viewDetails(r)}
-                className={`${secondaryButton} mt-5 w-fit`}
+                className="mt-6 w-fit rounded-lg border border-[#16264c]/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wide text-[#16264c] hover:bg-[#faf7f0]"
               >
                 View Details
               </button>
