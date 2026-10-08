@@ -18,7 +18,7 @@ function ProfileIcon() {
 }
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
   function closeMenu() {
@@ -44,18 +44,10 @@ export default function Navbar() {
         {/* Desktop right side */}
         <div className="hidden items-center gap-4 md:flex">
           {user ? (
-            <>
-              <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#16264c]">
-                <ProfileIcon />
-                Profile
-              </Link>
-              <Link to="/my-reservations" className="text-sm font-medium text-[#16264c]">
-                My Bookings
-              </Link>
-              <button onClick={logout} className="text-sm font-medium text-[#16264c]">
-                Sign out
-              </button>
-            </>
+            <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#16264c]">
+              <ProfileIcon />
+              Profile
+            </Link>
           ) : (
             <>
               <Link to="/find-reservation" className="text-sm font-medium text-[#16264c]">
@@ -98,16 +90,10 @@ export default function Navbar() {
             <NavLink to="/contact" className={navLinkClass} onClick={closeMenu}>Contact</NavLink>
 
             {user ? (
-              <>
-                <Link to="/profile" onClick={closeMenu} className="inline-flex items-center gap-1.5">
-                  <ProfileIcon />
-                  Profile
-                </Link>
-                <Link to="/my-reservations" onClick={closeMenu}>My Bookings</Link>
-                <button onClick={() => { logout(); closeMenu(); }} className="text-left">
-                  Sign out
-                </button>
-              </>
+              <Link to="/profile" onClick={closeMenu} className="inline-flex items-center gap-1.5">
+                <ProfileIcon />
+                Profile
+              </Link>
             ) : (
               <>
                 <Link to="/find-reservation" onClick={closeMenu}>Find Booking</Link>
