@@ -193,31 +193,32 @@ input[type=url]:focus, input[type=tel]:focus, input[type=date]:focus, textarea:f
 body.model-reservation .related-widget-wrapper-link { display: none; }
 
 
-/* ================= Dashboard fits the screen (large screens only) ================= */
-@media (min-width: 1101px) {
+/* ================= Dashboard fits the screen (no page scroll) ================= */
+@media (min-width: 901px) {
   body.dashboard { height: 100vh; height: 100dvh; overflow: hidden; }
   body.dashboard #container { height: 100vh; height: 100dvh; }
-  body.dashboard .main { flex: 1 1 0; min-height: 0; }
-  body.dashboard .main > .content { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  body.dashboard .main { position: relative; flex: 1 1 0; min-height: 0; }
+  body.dashboard .main > .content {
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
   body.dashboard #content { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 20px 32px 24px; }
   body.dashboard #content > br.clear { display: none; }
   body.dashboard .gm-stats { flex: none; margin-bottom: 20px; }
   body.dashboard .gm-dash-grid { flex: 1; min-height: 0; margin-bottom: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
   body.dashboard .gm-card { display: flex; flex-direction: column; min-height: 0; }
   body.dashboard .gm-card-head { flex: none; }
-  body.dashboard .gm-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
-  body.dashboard .gm-room-grid { flex: 1; min-height: 0; max-height: none; }
+  body.dashboard .gm-table-wrap { flex: 1; min-height: 0; overflow: auto; }
+  body.dashboard .gm-room-grid { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
 }
 
 /* ================= Smaller screens ================= */
-@media (max-width: 1100px) {
-  .gm-dash-grid { grid-template-columns: 1fr; }
-}
 @media (max-width: 900px) {
   #container { margin-left: 0; }
   .main { flex-direction: column; }
   .gm-sidebar { position: static; width: 100%; }
   .gm-scroll { overflow: visible; }
+  .gm-dash-grid { grid-template-columns: 1fr; }
   #content { padding: 20px 16px; }
   #header { padding: 12px 16px; }
 }
