@@ -541,13 +541,14 @@ export default function ProfilePage({ initialTab = 'info' }) {
               Personal Info
             </button>
 
-            <Link
-              to="/my-reservations"
+            <button
+              type="button"
+              onClick={() => setTab('bookings')}
               className={`${sidebarItemBase} ${tab === 'bookings' ? sidebarItemActive : sidebarItemIdle}`}
             >
               <CalendarIcon className="h-5 w-5" />
               My Bookings
-            </Link>
+            </button>
 
             <button
               type="button"
