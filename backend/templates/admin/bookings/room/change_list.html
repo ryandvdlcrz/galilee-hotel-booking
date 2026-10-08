@@ -1,0 +1,79 @@
+{% extends "admin/change_list.html" %}
+{% load admin_urls admin_list %}
+
+{% block branding %}
+<span class="gm-panel-title">Room Management</span>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block object-tools %}
+  <div class="gm-page-actions">
+    {% if cl.has_filters %}
+      <button type="button" class="gm-btn-ghost" id="gm-filters-toggle">Filters</button>
+    {% endif %}
+    {% if has_add_permission %}
+      <a class="gm-btn-primary" href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}">New Room</a>
+    {% endif %}
+  </div>
+
+  {% if room_stats and not is_popup %}
+  <div class="gm-stats">
+    <div class="gm-stat">
+      <div>
+        <p class="gm-stat-label">Total Rooms</p>
+        <p class="gm-stat-value">{{ room_stats.total }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-stat-available">
+      <div>
+        <p class="gm-stat-label">Available</p>
+        <p class="gm-stat-value">{{ room_stats.available }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-stat-reserved">
+      <div>
+        <p class="gm-stat-label">Reserved</p>
+        <p class="gm-stat-value">{{ room_stats.reserved }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-stat-occupied">
+      <div>
+        <p class="gm-stat-label">Occupied</p>
+        <p class="gm-stat-value">{{ room_stats.occupied }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-stat-maintenance">
+      <div>
+        <p class="gm-stat-label">Maintenance</p>
+        <p class="gm-stat-value">{{ room_stats.maintenance }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var btn = document.getElementById('gm-filters-toggle');
+      if (btn) {
+        {% if cl.has_active_filters %}document.body.classList.add('gm-filters-open');{% endif %}
+        btn.addEventListener('click', function () {
+          document.body.classList.toggle('gm-filters-open');
+        });
+      }
+
+      var q = document.getElementById('searchbar');
+      if (q) { q.setAttribute('placeholder', 'Search rooms...'); }
+
+      // Save immediately when a status dropdown changes
+      var form = document.getElementById('changelist-form');
+      var save = form && form.querySelector('input[name="_save"]');
+      if (form && save) {
+        document.body.classList.add('gm-autosave');
+        form.querySelectorAll('td.field-is_active select').forEach(function (s) {
+          s.addEventListener('change', function () { save.click(); });
+        });
+      }
+    });
+  </script>
+{% endblock %}

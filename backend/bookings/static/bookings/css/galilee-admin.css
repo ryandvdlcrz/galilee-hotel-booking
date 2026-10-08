@@ -276,6 +276,68 @@ body.change-list.model-reservation #result_list tbody tr:not(.selected):hover > 
 .gm-pagination .paginator a:hover { background: #faf7f0; }
 .gm-pagination .paginator .this-page { background: #16264c; border-color: #16264c; color: #fff; }
 
+/* ================= Room management page ================= */
+.gm-badge-maintenance { color: #374151; background: #e5e7eb; }
+.gm-stat-available { border-left: 4px solid #16a34a; }
+.gm-stat-reserved { border-left: 4px solid #d97706; }
+.gm-stat-occupied { border-left: 4px solid #16264c; }
+.gm-stat-maintenance { border-left: 4px solid #dc2626; }
+
+body.change-list.model-room #changelist { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+body.model-room .gm-stats { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* Search, filters panel, bulk actions */
+body.change-list.model-room #toolbar { margin: 0 0 20px; padding: 0; border: 0; background: transparent; }
+body.change-list.model-room #changelist-search > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: none; }
+body.change-list.model-room #toolbar #searchbar { box-sizing: border-box; width: 320px; height: 42px; padding: 0 16px; border: 1px solid #e6dfcc; border-radius: 999px; background: #fff; font-size: 13px; }
+body.change-list.model-room #toolbar form input[type="submit"] { height: 42px; padding: 0 18px; border: 0; border-radius: 999px; background: #16264c; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+body.change-list.model-room #changelist-filter { display: none; margin: 0 0 20px 24px; background: #fff; border: 1px solid #e6dfcc; border-radius: 12px; }
+body.change-list.model-room.gm-filters-open #changelist-filter { display: block; }
+body.change-list.model-room #changelist .actions { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 10px 16px; background: #fff; border: 1px solid #e6dfcc; border-radius: 12px; font-size: 12px; color: #6b7280; }
+
+/* The table becomes a card grid (still the normal admin table underneath) */
+body.model-room .results { overflow: visible; }
+body.model-room #result_list { display: block; width: 100%; border: 0; background: transparent; }
+body.model-room #result_list thead { display: none; }
+body.model-room #result_list tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 24px; }
+body.model-room #result_list tbody tr { position: relative; display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid #e6dfcc; border-radius: 16px; box-shadow: 0 6px 18px rgba(22, 38, 76, .05); }
+body.model-room #result_list tbody tr.selected { outline: 2px solid #16264c; }
+body.model-room #result_list tbody td, body.model-room #result_list tbody th { display: block; padding: 0; border: 0; background: transparent; }
+
+/* Photo */
+body.model-room #result_list tbody td.field-photo { order: 1; }
+body.model-room #result_list tbody td.field-photo img { display: block; width: 100%; height: 190px; object-fit: cover; }
+.gm-noimg { display: flex; align-items: center; justify-content: center; height: 190px; background: #f1ead8; font-size: 13px; font-weight: 600; color: #8b8577; }
+
+/* Room number badge (top left), status badge (top right), checkbox (bottom left of photo) */
+body.model-room #result_list tbody th.field-room_number { position: absolute; top: 14px; left: 14px; z-index: 3; padding: 4px 12px; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, .15); font-size: 13px; font-weight: 700; }
+body.model-room #result_list tbody th.field-room_number a:link,
+body.model-room #result_list tbody th.field-room_number a:visited { color: #16264c; text-decoration: none; }
+body.model-room #result_list tbody td.field-status_tonight { position: absolute; top: 14px; right: 14px; z-index: 3; }
+body.model-room #result_list tbody td.field-status_tonight .gm-badge { border: 1px solid rgba(255, 255, 255, .8); box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+body.model-room .gm-badge::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; }
+body.model-room #result_list tbody td.action-checkbox { position: absolute; top: 152px; left: 14px; z-index: 3; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+
+/* Text content */
+body.model-room #result_list tbody td.field-type_name { order: 2; padding: 20px 22px 6px; font-size: 18px; font-weight: 800; color: #16264c; }
+body.model-room #result_list tbody td.field-specs { order: 3; display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 0 22px; font-size: 13px; color: #6b7280; }
+.gm-spec { display: inline-flex; align-items: center; gap: 6px; }
+.gm-spec::before { content: ""; flex: none; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+.gm-spec-guests { --ico: var(--i-users); }
+.gm-spec-bed { --ico: var(--i-bed); }
+body.model-room #result_list tbody td.field-price { order: 4; padding: 14px 22px 0; }
+body.model-room #result_list tbody td.field-price strong { font-size: 24px; font-weight: 800; color: #8c6e26; }
+body.model-room #result_list tbody td.field-price small { font-size: 12px; color: #6b7280; }
+
+/* Update status */
+body.model-room #result_list tbody td.field-is_active { order: 5; margin: 18px 22px 22px; padding-top: 16px; border-top: 1px solid #f1ead8; }
+body.model-room #result_list tbody td.field-is_active::before { content: "UPDATE STATUS"; display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #6b7280; }
+body.model-room #result_list tbody td.field-is_active select { box-sizing: border-box; width: 100%; height: 42px; padding: 0 34px 0 14px; border: 1px solid #e6dfcc; border-radius: 10px; background-color: #faf7f0; font-size: 14px; font-weight: 600; color: #16264c; }
+
+/* Pagination under the grid */
+body.model-room .gm-pagination { margin-top: 24px; padding: 0; border-top: 0; }
+body.gm-autosave .gm-pagination input[name="_save"] { display: none; }
+
 /* ================= Smaller screens ================= */
 @media (max-width: 900px) {
   #container { margin-left: 0; }

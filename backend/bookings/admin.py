@@ -1,10 +1,12 @@
 from datetime import timedelta
 
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
 from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
 
@@ -52,11 +54,109 @@ class RoomTypeAdmin(admin.ModelAdmin):
     inlines = [RoomImageInline, RoomInLine]
 
 
+class RoomStatusForm(forms.ModelForm):
+    """Used only for the quick-edit dropdown on the Rooms list page."""
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.Select(choices=[(True, "Active"), (False, "Under maintenance")]),
+    )
+
+    class Meta:
+        model = Room
+        fields = ("is_active",)
+
+
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("room_number", "room_type", "is_active")
+    list_display = ("room_number", "photo", "status_tonight", "type_name", "specs", "price", "is_active")
+    list_display_links = ("room_number",)
+    list_editable = ("is_active",)
     list_filter = ("room_type", "is_active")
+    list_per_page = 12
     search_fields = ("room_number",)
+
+    def get_changelist_form(self, request, **kwargs):
+        kwargs.setdefault("form", RoomStatusForm)
+        return super().get_changelist_form(request, **kwargs)
+
+    def get_queryset(self, request):
+        """Annotate each room with tonight's occupancy so the list can show a live status."""
+        qs = (
+            super().get_queryset(request)
+            .select_related("room_type")
+            .prefetch_related("room_type__images")
+        )
+        today = timezone.localdate()
+        tomorrow = today + timedelta(days=1)
+        tonight = Reservation.objects.filter(
+            rooms=OuterRef("pk"),
+            check_in_date__lt=tomorrow,
+            check_out_date__gt=today,
+        )
+        return qs.annotate(
+            tonight_occupied=Exists(tonight.filter(status=Reservation.Status.CHECKED_IN)),
+            tonight_reserved=Exists(
+                tonight.filter(status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED])
+            ),
+        )
+
+    # ---- card fields (display only) ----
+
+    @admin.display(description="Photo")
+    def photo(self, obj):
+        images = list(obj.room_type.images.all())
+        if images and images[0].image:
+            return format_html(
+                '<img src="{}" alt="{}" loading="lazy">', images[0].image.url, obj.room_type.name
+            )
+        return format_html('<div class="gm-noimg">{}</div>', "No photo")
+
+    @admin.display(description="Status")
+    def status_tonight(self, obj):
+        if not obj.is_active:
+            key, label = "maintenance", "Maintenance"
+        elif obj.tonight_occupied:
+            key, label = "occupied", "Occupied"
+        elif obj.tonight_reserved:
+            key, label = "reserved", "Reserved"
+        else:
+            key, label = "available", "Available"
+        return format_html('<span class="gm-badge gm-badge-{}">{}</span>', key, label)
+
+    @admin.display(description="Room type", ordering="room_type__name")
+    def type_name(self, obj):
+        return obj.room_type.name
+
+    @admin.display(description="Details")
+    def specs(self, obj):
+        rt = obj.room_type
+        parts = [format_html('<span class="gm-spec gm-spec-guests">{} Max</span>', rt.capacity)]
+        if rt.bed_configuration:
+            parts.append(format_html('<span class="gm-spec gm-spec-bed">{}</span>', rt.bed_configuration))
+        return format_html_join("", "{}", ((p,) for p in parts))
+
+    @admin.display(description="Price", ordering="room_type__price_per_night")
+    def price(self, obj):
+        amount = f"{obj.room_type.price_per_night:,.2f}"
+        if amount.endswith(".00"):
+            amount = amount[:-3]
+        return format_html("<strong>₱{}</strong> <small>/night</small>", amount)
+
+    # ---- stat cards on top of the list page (read-only queries) ----
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        rooms = self.get_queryset(request)
+        active = rooms.filter(is_active=True)
+        extra_context["room_stats"] = {
+            "total": rooms.count(),
+            "available": active.filter(tonight_occupied=False, tonight_reserved=False).count(),
+            "reserved": active.filter(tonight_occupied=False, tonight_reserved=True).count(),
+            "occupied": active.filter(tonight_occupied=True).count(),
+            "maintenance": rooms.filter(is_active=False).count(),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(Promo)
