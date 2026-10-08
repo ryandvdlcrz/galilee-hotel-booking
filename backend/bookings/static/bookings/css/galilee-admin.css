@@ -212,6 +212,70 @@ body.model-reservation .related-widget-wrapper-link { display: none; }
   body.dashboard .gm-room-grid { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
 }
 
+/* ================= Reservation list page ================= */
+:root {
+  --i-filter: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 6h18M7 12h10M10 18h4'/></svg>");
+  --i-plus: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 5v14M5 12h14'/></svg>");
+}
+
+.gm-page-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+.gm-btn-ghost, a.gm-btn-primary:link, a.gm-btn-primary:visited {
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border-radius: 10px;
+  font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.gm-btn-ghost { --ico: var(--i-filter); border: 1px solid #e6dfcc; background: #fff; color: #16264c; }
+.gm-btn-ghost:hover { background: #faf7f0; }
+a.gm-btn-primary:link, a.gm-btn-primary:visited { --ico: var(--i-plus); border: 0; background: #16264c; color: #fff; }
+a.gm-btn-primary:hover { background: #1f3468; color: #fff; }
+.gm-btn-ghost::before, a.gm-btn-primary::before {
+  content: ""; width: 16px; height: 16px; background: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat;
+}
+.gm-stat-value.gm-amber { color: #92400e; }
+
+/* Card */
+body.change-list.model-reservation #changelist { border-radius: 16px; box-shadow: 0 6px 18px rgba(22, 38, 76, .05); overflow: hidden; }
+.gm-list-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 20px 24px; }
+.gm-list-head h3 { margin: 0; font-size: 20px; font-weight: 800; text-transform: none; color: #16264c; }
+
+/* Search */
+body.change-list.model-reservation #toolbar { margin: 0; padding: 0; border: 0; background: transparent; }
+body.change-list.model-reservation #changelist-search > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: none; }
+body.change-list.model-reservation #toolbar #searchbar { box-sizing: border-box; width: 280px; height: 40px; padding: 0 12px; border: 1px solid #e6dfcc; border-radius: 10px; background: #faf7f0; font-size: 13px; }
+body.change-list.model-reservation #toolbar form input[type="submit"] { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #16264c; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+/* Date hierarchy, bulk actions, filters panel */
+body.change-list.model-reservation .toplinks { padding: 12px 24px; }
+body.change-list.model-reservation #changelist .actions { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #faf7f0; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 12px; color: #6b7280; }
+body.change-list.model-reservation #changelist-filter { display: none; margin: 0; padding-bottom: 16px; background: #faf7f0; border-left: 1px solid #e6dfcc; }
+body.change-list.model-reservation.gm-filters-open #changelist-filter { display: block; }
+
+/* Table */
+body.change-list.model-reservation #result_list { width: 100%; border-collapse: collapse; }
+body.change-list.model-reservation #changelist table thead th { padding: 14px 24px; background: #f1ead8; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #16264c; }
+body.change-list.model-reservation #changelist table thead th a:link,
+body.change-list.model-reservation #changelist table thead th a:visited { color: #16264c; }
+body.change-list.model-reservation #changelist table tbody td,
+body.change-list.model-reservation #changelist table tbody th { padding: 16px 24px; border-bottom: 1px solid #f1ead8; font-size: 13px; font-weight: 500; color: #16264c; vertical-align: middle; }
+body.change-list.model-reservation #changelist table tbody th { font-weight: 700; }
+body.change-list.model-reservation #changelist table tbody a:link,
+body.change-list.model-reservation #changelist table tbody a:visited { color: #16264c; text-decoration: none; }
+body.change-list.model-reservation #changelist table tbody a:hover { color: #a6842f; }
+body.change-list.model-reservation #result_list tbody tr:not(.selected) { background: #fff; }
+body.change-list.model-reservation #result_list tbody tr:not(.selected):hover > * { background: #faf7f0; }
+.gm-pill { display: inline-block; padding: 5px 12px; border: 1px solid #dbe2f3; border-radius: 999px; background: #eef2fb; font-size: 12px; font-weight: 600; color: #16264c; }
+
+/* Pagination (all list pages) */
+.gm-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 24px; border-top: 1px solid #e6dfcc; }
+.gm-showing { margin: 0; font-size: 12px; color: #6b7280; }
+.gm-pagination .paginator { display: flex; align-items: center; gap: 8px; width: auto; margin: 0; padding: 0; border: 0; }
+.gm-pagination .paginator a:link, .gm-pagination .paginator a:visited, .gm-pagination .paginator .this-page {
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 36px; height: 36px; padding: 0 8px;
+  border: 1px solid #e6dfcc; border-radius: 8px; background: #fff; color: #16264c; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.gm-pagination .paginator a:hover { background: #faf7f0; }
+.gm-pagination .paginator .this-page { background: #16264c; border-color: #16264c; color: #fff; }
+
 /* ================= Smaller screens ================= */
 @media (max-width: 900px) {
   #container { margin-left: 0; }

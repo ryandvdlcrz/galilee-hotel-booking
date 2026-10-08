@@ -67,19 +67,32 @@ class PromoAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+def _room_occupancy(today, tomorrow):
+    """Return (total_rooms, occupied_rooms) for tonight across active room types."""
+    total = 0
+    occupied = 0
+    for rt in RoomType.objects.filter(is_active=True):
+        rt_total = rt.rooms.filter(is_active=True).count()
+        total += rt_total
+        occupied += min(rt.rooms_booked_for_range(today, tomorrow), rt_total)
+    return total, occupied
+
+
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
     list_display = (
-        "reservation_code",
+        "res_id",
         "guest_name",
-        "room_type",
-        "check_in_date",
-        "check_out_date",
-        "num_rooms",
+        "room_type_pill",
+        "stay_dates",
+        "guests",
         "status_badge",
-        "total_price",
+        "amount",
     )
+    list_display_links = ("res_id", "guest_name")
     list_filter = ("status", "room_type", "check_in_date")
+    list_per_page = 10
+    list_select_related = ("room_type",)
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
     readonly_fields = ("reservation_code", "total_price", "created_at", "updated_at")
     date_hierarchy = "check_in_date"
@@ -93,6 +106,30 @@ class ReservationAdmin(admin.ModelAdmin):
         "cancelled": ("#991b1b", "#fee2e2"),
     }
 
+    # ---- list page columns (display only) ----
+
+    @admin.display(description="Res ID", ordering="reservation_code")
+    def res_id(self, obj):
+        return f"#{obj.reservation_code}"
+
+    @admin.display(description="Room type", ordering="room_type__name")
+    def room_type_pill(self, obj):
+        return format_html('<span class="gm-pill">{}</span>', obj.room_type.name)
+
+    @admin.display(description="Dates", ordering="check_in_date")
+    def stay_dates(self, obj):
+        fmt = "%b %d"
+        if (
+            obj.check_in_date.year != timezone.now().year
+            or obj.check_out_date.year != obj.check_in_date.year
+        ):
+            fmt = "%b %d, %Y"
+        return f"{obj.check_in_date.strftime(fmt)} - {obj.check_out_date.strftime(fmt)}"
+
+    @admin.display(description="Guests", ordering="num_guests")
+    def guests(self, obj):
+        return obj.num_guests
+
     @admin.display(description="Status", ordering="status")
     def status_badge(self, obj):
         fg, bg = self.STATUS_COLORS.get(obj.status, ("#374151", "#e5e7eb"))
@@ -101,6 +138,30 @@ class ReservationAdmin(admin.ModelAdmin):
             'font-size:11px;font-weight:700;color:{};background:{};">{}</span>',
             fg, bg, obj.get_status_display(),
         )
+
+    @admin.display(description="Amount", ordering="total_price")
+    def amount(self, obj):
+        return f"₱{obj.total_price:,.2f}"
+
+    # ---- stat cards on top of the list page (read-only queries) ----
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        today = timezone.now().date()
+        tomorrow = today + timedelta(days=1)
+        total_rooms, occupied = _room_occupancy(today, tomorrow)
+
+        extra_context["reservation_stats"] = {
+            "total": Reservation.objects.count(),
+            "pending": Reservation.objects.filter(status=Reservation.Status.PENDING).count(),
+            "arrivals_today": Reservation.objects.filter(
+                check_in_date=today,
+                status__in=[Reservation.Status.PENDING, Reservation.Status.CONFIRMED],
+            ).count(),
+            "occupancy": round(occupied * 100 / total_rooms) if total_rooms else 0,
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
     fieldsets = (
         ("Reservation", {
