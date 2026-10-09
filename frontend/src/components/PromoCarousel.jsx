@@ -6,14 +6,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
  * - 1 promo: shown on its own, no controls.
  * - 2+ promos: fades between slides, with arrows, dots, swipe, keyboard
  *   arrows and autoplay (pauses on hover/focus, respects reduced motion).
- * The poster is always shown in full over a blurred copy of itself, so it
- * looks good for any image shape and any number of promos.
+ * Wide (landscape) images fill the whole banner on larger screens.
+ * Tall posters are shown in full over a blurred copy of themselves.
  */
 
 const AUTOPLAY_MS = 5000 // set to 0 to turn autoplay off
 const SWIPE_PX = 50
 
 function Slide({ promo, index, total, isActive }) {
+  // Wide images fill the whole banner on larger screens.
+  // Tall posters are shown in full over a blurred copy of themselves.
+  const [wide, setWide] = useState(false)
+
   const layer = `absolute inset-0 transition-opacity duration-500 ease-in-out ${
     isActive ? 'opacity-100' : 'pointer-events-none opacity-0'
   }`
@@ -27,17 +31,30 @@ function Slide({ promo, index, total, isActive }) {
         draggable={false}
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-2xl"
+        className={`absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-2xl ${
+          wide ? 'sm:hidden' : ''
+        }`}
       />
-      <div className="absolute inset-0 bg-black/10" />
-      <div className="relative flex h-full items-center justify-center p-4 sm:p-6">
+      <div className={`absolute inset-0 bg-black/10 ${wide ? 'sm:hidden' : ''}`} />
+      <div
+        className={`relative flex h-full items-center justify-center ${
+          wide ? 'p-4 sm:p-0' : 'p-4 sm:p-6'
+        }`}
+      >
         <img
           src={promo.image}
           alt={promo.title}
           draggable={false}
           loading={index === 0 ? 'eager' : 'lazy'}
           decoding="async"
-          className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+          onLoad={(e) =>
+            setWide(e.currentTarget.naturalWidth >= e.currentTarget.naturalHeight * 1.4)
+          }
+          className={`max-h-full max-w-full rounded-xl object-contain shadow-2xl ${
+            wide
+              ? 'sm:h-full sm:w-full sm:max-w-none sm:rounded-none sm:object-cover sm:shadow-none'
+              : ''
+          }`}
         />
       </div>
     </>
@@ -139,7 +156,7 @@ export default function PromoCarousel({ promos }) {
       role="region"
       aria-roledescription="carousel"
       aria-label="Promotions"
-      className="mx-auto max-w-4xl"
+      className="w-full"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -151,7 +168,7 @@ export default function PromoCarousel({ promos }) {
         onPointerUp={handlePointerUp}
         onClickCapture={handleClickCapture}
         onKeyDown={handleKeyDown}
-        className="relative h-[440px] touch-pan-y select-none overflow-hidden rounded-3xl bg-[#f1ead8] shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a6842f] sm:h-[520px] md:h-[560px]"
+        className="relative aspect-[4/5] touch-pan-y select-none overflow-hidden rounded-3xl bg-[#f1ead8] shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a6842f] sm:aspect-[16/9]"
       >
         {promos.map((promo, index) => (
           <Slide
