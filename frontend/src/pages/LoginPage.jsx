@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { GoogleLogin } from '@react-oauth/google'
@@ -14,6 +14,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+    // Google's button only accepts a pixel width, so measure the form and match it.
+  const googleBoxRef = useRef(null)
+  const [googleWidth, setGoogleWidth] = useState(368)
+
+  useEffect(() => {
+    const el = googleBoxRef.current
+    if (!el) return undefined
+
+    const update = () => {
+      const w = Math.round(el.getBoundingClientRect().width)
+      if (w) setGoogleWidth(Math.min(Math.max(w, 200), 400)) // Google allows 200 to 400px
+    }
+
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -117,7 +136,7 @@ export default function LoginPage() {
               {submitting ? 'Signing in…' : 'Sign In'}
             </button>
 
-            <div className="flex justify-center">
+            <div ref={googleBoxRef} className="flex w-full justify-center">
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   setError('')
@@ -129,7 +148,8 @@ export default function LoginPage() {
                   }
                 }}
                 onError={() => setError('Google sign-in failed. Please try again.')}
-                width="384"
+                width={String(googleWidth)}
+                locale="en"
               />
             </div>
           </form>
