@@ -1,46 +1,57 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 /**
- * Promo carousel.
- * - 1 promo: centered poster, no controls.
- * - A few promos that all fit: centered row, no controls.
- * - More promos than fit: snap-scrolling carousel with arrows (desktop),
- *   swipe (touch) and dots.
- * Images are shown in full (never cropped). No extra library needed.
+ * Promo image carousel: one promo at a time.
+ * - 1 promo: shown on its own, no controls.
+ * - 2+ promos: fades between slides, with arrows, dots, swipe, keyboard
+ *   arrows and autoplay (pauses on hover/focus, respects reduced motion).
+ * The poster is always shown in full over a blurred copy of itself, so it
+ * looks good for any image shape and any number of promos.
  */
 
-function getMetrics(el) {
-  const first = el.querySelector('[data-promo-card]')
-  if (!first) return null
-  const gap = parseFloat(getComputedStyle(el).columnGap) || 0
-  return { step: first.offsetWidth + gap, gap }
-}
+const AUTOPLAY_MS = 5000 // set to 0 to turn autoplay off
+const SWIPE_PX = 50
 
-function Slide({ promo, index, total, widthClass }) {
-  const classes = `${widthClass} relative aspect-[4/5] shrink-0 snap-start overflow-hidden rounded-2xl bg-[#f1ead8] shadow-lg`
+function Slide({ promo, index, total, isActive }) {
+  const layer = `absolute inset-0 transition-opacity duration-500 ease-in-out ${
+    isActive ? 'opacity-100' : 'pointer-events-none opacity-0'
+  }`
 
   const content = promo.image ? (
-    <img
-      src={promo.image}
-      alt={promo.title}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-      className="h-full w-full object-contain"
-    />
+    <>
+      <img
+        src={promo.image}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-2xl"
+      />
+      <div className="absolute inset-0 bg-black/10" />
+      <div className="relative flex h-full items-center justify-center p-4 sm:p-6">
+        <img
+          src={promo.image}
+          alt={promo.title}
+          draggable={false}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+          className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+        />
+      </div>
+    </>
   ) : (
-    <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-gray-500">
-      <span className="text-sm font-medium">{promo.title}</span>
-      <span className="text-xs">No image uploaded yet</span>
+    <div className="flex h-full flex-col items-center justify-center gap-2 bg-[#16264c] px-6 text-center text-white">
+      <span className="text-2xl font-bold">{promo.title}</span>
     </div>
   )
 
   const shared = {
-    'data-promo-card': true,
     role: 'group',
     'aria-roledescription': 'slide',
     'aria-label': `${index + 1} of ${total}`,
+    'aria-hidden': !isActive,
   }
 
   if (promo.link_url) {
@@ -50,7 +61,9 @@ function Slide({ promo, index, total, widthClass }) {
         href={promo.link_url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${classes} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a6842f]`}
+        draggable={false}
+        tabIndex={isActive ? 0 : -1}
+        className={`${layer} block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#a6842f]`}
       >
         {content}
       </a>
@@ -58,150 +71,134 @@ function Slide({ promo, index, total, widthClass }) {
   }
 
   return (
-    <div {...shared} className={classes}>
+    <div {...shared} className={layer}>
       {content}
     </div>
   )
 }
 
 export default function PromoCarousel({ promos }) {
-  const scrollRef = useRef(null)
-  const [view, setView] = useState({
-    canScroll: false,
-    positions: 1,
-    active: 0,
-    atStart: true,
-    atEnd: true,
-  })
-
   const total = promos.length
-  const single = total === 1
+  const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const drag = useRef({ x: 0, swiped: false })
 
-  // Measure the scroller and work out what the controls should show.
-  const update = useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const metrics = getMetrics(el)
-    if (!metrics) return
-    const { step, gap } = metrics
+  const current = total ? Math.min(active, total - 1) : 0
 
-    const canScroll = el.scrollWidth > el.clientWidth + 1
-    const visible = Math.max(1, Math.floor((el.clientWidth + gap) / step + 0.05))
-    const positions = Math.max(1, total - visible + 1)
-    const atStart = el.scrollLeft <= 1
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1
+  const go = useCallback(
+    (i) => {
+      if (total) setActive(((i % total) + total) % total)
+    },
+    [total]
+  )
 
-    let active = Math.min(Math.max(Math.round(el.scrollLeft / step), 0), positions - 1)
-    if (atStart) active = 0
-    if (atEnd) active = positions - 1
-
-    setView((prev) =>
-      prev.canScroll === canScroll &&
-      prev.positions === positions &&
-      prev.active === active &&
-      prev.atStart === atStart &&
-      prev.atEnd === atEnd
-        ? prev
-        : { canScroll, positions, active, atStart, atEnd }
-    )
-  }, [total])
-
-  useLayoutEffect(() => {
-    const el = scrollRef.current
-    if (!el) return undefined
-
-    let frame = 0
-    const schedule = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(update)
-    }
-
-    update()
-    el.addEventListener('scroll', schedule, { passive: true })
-    const observer = new ResizeObserver(schedule)
-    observer.observe(el)
-
-    return () => {
-      cancelAnimationFrame(frame)
-      el.removeEventListener('scroll', schedule)
-      observer.disconnect()
-    }
-  }, [update])
-
-  function goTo(index) {
-    const el = scrollRef.current
-    if (!el) return
-    const metrics = getMetrics(el)
-    if (!metrics) return
-    const target = Math.min(Math.max(index, 0), view.positions - 1)
-    el.scrollTo({ left: target * metrics.step, behavior: 'smooth' })
-  }
+  // Autoplay (only with 2+ promos)
+  useEffect(() => {
+    if (total < 2 || !AUTOPLAY_MS || paused) return undefined
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    const id = setInterval(() => {
+      if (!document.hidden) setActive((i) => (i + 1) % total)
+    }, AUTOPLAY_MS)
+    return () => clearInterval(id)
+  }, [total, paused, current])
 
   if (total === 0) return null
 
-  const slideWidth = single ? 'w-[85%] max-w-[420px]' : 'w-[85%] sm:w-[46%] lg:w-[31%]'
-  const scrollerClass = [
-    'relative flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth py-4',
-    '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-    view.canScroll ? '' : 'justify-center',
-  ].join(' ')
+  const multiple = total > 1
+
+  function handlePointerDown(e) {
+    drag.current = { x: e.clientX, swiped: false }
+  }
+
+  function handlePointerUp(e) {
+    if (!multiple) return
+    const dx = e.clientX - drag.current.x
+    if (Math.abs(dx) > SWIPE_PX) {
+      drag.current.swiped = true
+      go(current + (dx < 0 ? 1 : -1))
+    }
+  }
+
+  // A swipe should not open the promo link
+  function handleClickCapture(e) {
+    if (drag.current.swiped) {
+      e.preventDefault()
+      e.stopPropagation()
+      drag.current.swiped = false
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (!multiple) return
+    if (e.key === 'ArrowLeft') go(current - 1)
+    if (e.key === 'ArrowRight') go(current + 1)
+  }
 
   return (
-    <div role="region" aria-roledescription="carousel" aria-label="Promotions">
-      <div className="relative">
-        <div ref={scrollRef} className={scrollerClass}>
-          {promos.map((promo, index) => (
-            <Slide
-              key={promo.id}
-              promo={promo}
-              index={index}
-              total={total}
-              widthClass={slideWidth}
-            />
-          ))}
-        </div>
+    <div
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Promotions"
+      className="mx-auto max-w-4xl"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      <div
+        tabIndex={multiple ? 0 : -1}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onClickCapture={handleClickCapture}
+        onKeyDown={handleKeyDown}
+        className="relative h-[440px] touch-pan-y select-none overflow-hidden rounded-3xl bg-[#f1ead8] shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a6842f] sm:h-[520px] md:h-[560px]"
+      >
+        {promos.map((promo, index) => (
+          <Slide
+            key={promo.id}
+            promo={promo}
+            index={index}
+            total={total}
+            isActive={index === current}
+          />
+        ))}
 
-        {view.canScroll && !view.atStart && (
-          <button
-            type="button"
-            onClick={() => goTo(view.active - 1)}
-            aria-label="Previous promo"
-            className="absolute left-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-50 sm:flex"
-          >
-            <ChevronLeft className="h-5 w-5 text-[#16264c]" />
-          </button>
-        )}
+        {multiple && (
+          <>
+            <button
+              type="button"
+              onClick={() => go(current - 1)}
+              aria-label="Previous promo"
+              className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white sm:h-10 sm:w-10"
+            >
+              <ChevronLeft className="h-5 w-5 text-[#16264c]" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(current + 1)}
+              aria-label="Next promo"
+              className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white sm:h-10 sm:w-10"
+            >
+              <ChevronRight className="h-5 w-5 text-[#16264c]" />
+            </button>
 
-        {view.canScroll && !view.atEnd && (
-          <button
-            type="button"
-            onClick={() => goTo(view.active + 1)}
-            aria-label="Next promo"
-            className="absolute right-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-50 sm:flex"
-          >
-            <ChevronRight className="h-5 w-5 text-[#16264c]" />
-          </button>
+            <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-black/30 px-3 py-2">
+              {promos.map((promo, i) => (
+                <button
+                  key={promo.id}
+                  type="button"
+                  onClick={() => go(i)}
+                  aria-label={`Go to promo ${i + 1}`}
+                  aria-current={i === current ? 'true' : undefined}
+                  className={`h-2.5 rounded-full transition-all ${
+                    i === current ? 'w-6 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/80'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
-
-      {view.canScroll && view.positions > 1 && (
-        <div className="mt-3 flex justify-center gap-2">
-          {Array.from({ length: view.positions }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
-              aria-current={i === view.active ? 'true' : undefined}
-              className={`h-2.5 rounded-full transition-all ${
-                i === view.active
-                  ? 'w-6 bg-[#16264c]'
-                  : 'w-2.5 bg-[#16264c]/25 hover:bg-[#16264c]/50'
-              }`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
