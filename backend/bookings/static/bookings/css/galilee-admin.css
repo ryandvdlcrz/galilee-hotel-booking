@@ -338,6 +338,46 @@ body.model-room #result_list tbody td.field-is_active select { box-sizing: borde
 body.model-room .gm-pagination { margin-top: 24px; padding: 0; border-top: 0; }
 body.gm-autosave .gm-pagination input[name="_save"] { display: none; }
 
+/* ================= Room type list page ================= */
+.gm-badge-visible { color: #166534; background: #dcfce7; }
+.gm-badge-hidden { color: #374151; background: #e5e7eb; }
+.gm-accent-green { border-left: 4px solid #16a34a; }
+.gm-accent-amber { border-left: 4px solid #d97706; }
+.gm-accent-navy { border-left: 4px solid #16264c; }
+
+/* Card */
+body.change-list.model-roomtype #changelist { border-radius: 16px; box-shadow: 0 6px 18px rgba(22, 38, 76, .05); overflow: hidden; }
+
+/* Search, bulk actions, filters panel */
+body.change-list.model-roomtype #toolbar { margin: 0; padding: 0; border: 0; background: transparent; }
+body.change-list.model-roomtype #changelist-search > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: none; }
+body.change-list.model-roomtype #toolbar #searchbar { box-sizing: border-box; width: 280px; height: 40px; padding: 0 12px; border: 1px solid #e6dfcc; border-radius: 10px; background: #faf7f0; font-size: 13px; }
+body.change-list.model-roomtype #toolbar form input[type="submit"] { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #16264c; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+body.change-list.model-roomtype #changelist .actions { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #faf7f0; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 12px; color: #6b7280; }
+body.change-list.model-roomtype #changelist-filter { display: none; margin: 0; padding-bottom: 16px; background: #faf7f0; border-left: 1px solid #e6dfcc; }
+body.change-list.model-roomtype.gm-filters-open #changelist-filter { display: block; }
+
+/* Table */
+body.change-list.model-roomtype #result_list { width: 100%; border-collapse: collapse; }
+body.change-list.model-roomtype #changelist table thead th { padding: 14px 24px; background: #f1ead8; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #16264c; }
+body.change-list.model-roomtype #changelist table thead th a:link,
+body.change-list.model-roomtype #changelist table thead th a:visited { color: #16264c; }
+body.change-list.model-roomtype #changelist table tbody td,
+body.change-list.model-roomtype #changelist table tbody th { padding: 14px 24px; border-bottom: 1px solid #f1ead8; font-size: 13px; font-weight: 500; color: #16264c; vertical-align: middle; }
+body.change-list.model-roomtype #changelist table tbody a:link,
+body.change-list.model-roomtype #changelist table tbody a:visited { color: #16264c; text-decoration: none; }
+body.change-list.model-roomtype #result_list tbody tr:not(.selected) { background: #fff; }
+body.change-list.model-roomtype #result_list tbody tr:not(.selected):hover > * { background: #faf7f0; }
+
+/* Cell content */
+.gm-rt { display: flex; align-items: center; gap: 14px; }
+.gm-rt-thumb, .gm-rt-noimg { flex: none; width: 64px; height: 48px; border-radius: 10px; object-fit: cover; }
+.gm-rt-noimg { display: flex; align-items: center; justify-content: center; background: #f1ead8; font-size: 18px; font-weight: 700; color: #8b8577; }
+.gm-rt strong { display: block; font-size: 14px; font-weight: 700; color: #16264c; }
+.gm-rt small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #6b7280; }
+.gm-gold { font-size: 15px; font-weight: 800; color: #8c6e26; }
+.gm-cell-sub { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #6b7280; }
+
 /* ================= Smaller screens ================= */
 @media (max-width: 900px) {
   #container { margin-left: 0; }

@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
@@ -44,14 +44,95 @@ class RoomInLine(admin.TabularInline):
     extra = 1
 
 
+def _with_room_counts(qs):
+    """Annotate room types with how many Room records they have (all / active)."""
+    return qs.annotate(
+        rooms_total=Count("rooms", distinct=True),
+        rooms_active=Count("rooms", filter=Q(rooms__is_active=True), distinct=True),
+    )
+
+
+def _bookable(rt):
+    """Rooms customers can book for an annotated RoomType (mirrors RoomType.bookable_rooms)."""
+    return rt.rooms_active if rt.rooms_total else rt.total_rooms
+
+
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "price_per_night", "capacity", "extra_pax_fee", "total_rooms", "is_active")
+    list_display = ("type_card", "price_night", "guest_capacity", "rooms_count", "visibility")
+    list_display_links = ("type_card",)
     list_filter = ("is_active",)
+    list_per_page = 10
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ("amenities",)
     inlines = [RoomImageInline, RoomInLine]
+
+    def get_queryset(self, request):
+        return _with_room_counts(super().get_queryset(request)).prefetch_related("images")
+
+    # ---- list page columns (display only) ----
+
+    @admin.display(description="Room type", ordering="name")
+    def type_card(self, obj):
+        images = list(obj.images.all())
+        if images and images[0].image:
+            thumb = format_html(
+                '<img class="gm-rt-thumb" src="{}" alt="" loading="lazy">', images[0].image.url
+            )
+        else:
+            thumb = format_html('<div class="gm-rt-noimg">{}</div>', obj.name[:1].upper())
+        beds = format_html("<small>{}</small>", obj.bed_configuration) if obj.bed_configuration else ""
+        return format_html(
+            '<div class="gm-rt">{}<div><strong>{}</strong>{}</div></div>', thumb, obj.name, beds
+        )
+
+    @admin.display(description="Price", ordering="price_per_night")
+    def price_night(self, obj):
+        amount = f"{obj.price_per_night:,.2f}".removesuffix(".00")
+        return format_html(
+            '<span class="gm-gold">₱{}</span><span class="gm-cell-sub">per night</span>', amount
+        )
+
+    @admin.display(description="Capacity", ordering="capacity")
+    def guest_capacity(self, obj):
+        sub = ""
+        if obj.extra_pax_fee:
+            fee = f"{obj.extra_pax_fee:,.2f}".removesuffix(".00")
+            sub = format_html('<span class="gm-cell-sub">Extra guest ₱{}/night</span>', fee)
+        return format_html("{} guest{}{}", obj.capacity, "" if obj.capacity == 1 else "s", sub)
+
+    @admin.display(description="Rooms", ordering="rooms_active")
+    def rooms_count(self, obj):
+        if obj.rooms_total == 0:
+            return format_html(
+                '{}<span class="gm-cell-sub">No room numbers yet</span>', obj.total_rooms
+            )
+        return format_html(
+            '{} active<span class="gm-cell-sub">of {} room{}</span>',
+            obj.rooms_active, obj.rooms_total, "" if obj.rooms_total == 1 else "s",
+        )
+
+    @admin.display(description="Status", ordering="is_active")
+    def visibility(self, obj):
+        if obj.is_active:
+            return format_html('<span class="gm-badge gm-badge-visible">{}</span>', "Visible")
+        return format_html('<span class="gm-badge gm-badge-hidden">{}</span>', "Hidden")
+
+    # ---- stat cards on top of the list page (read-only queries) ----
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        types = list(_with_room_counts(RoomType.objects.all()))
+        active = [t for t in types if t.is_active]
+        extra_context["roomtype_stats"] = {
+            "total": len(types),
+            "visible": len(active),
+            "hidden": len(types) - len(active),
+            "rooms": sum(_bookable(t) for t in active),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 class RoomStatusForm(forms.ModelForm):
