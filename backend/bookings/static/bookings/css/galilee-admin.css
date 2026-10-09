@@ -378,6 +378,55 @@ body.change-list.model-roomtype #result_list tbody tr:not(.selected):hover > * {
 .gm-gold { font-size: 15px; font-weight: 800; color: #8c6e26; }
 .gm-cell-sub { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #6b7280; }
 
+/* ================= Promo page ================= */
+.gm-badge-visible { color: #166534; background: #dcfce7; }
+.gm-badge-hidden { color: #374151; background: #e5e7eb; }
+
+body.change-list.model-promo #changelist { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+body.change-list.model-promo #changelist-filter { display: none; }
+
+/* Search */
+body.change-list.model-promo #toolbar { margin: 0 0 24px; padding: 0; border: 0; background: transparent; }
+body.change-list.model-promo #changelist-search > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: none; }
+body.change-list.model-promo #toolbar #searchbar { box-sizing: border-box; width: 340px; height: 42px; padding: 0 16px; border: 1px solid #e6dfcc; border-radius: 999px; background: #fff; font-size: 13px; }
+body.change-list.model-promo #toolbar form input[type="submit"] { height: 42px; padding: 0 18px; border: 0; border-radius: 999px; background: #16264c; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+/* Grid and section title */
+.gm-promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; margin-bottom: 36px; }
+.gm-section-title { margin: 0 0 16px; font-size: 22px; font-weight: 800; text-transform: none; color: #16264c; }
+
+/* Promo card */
+.gm-promo { overflow: hidden; background: #fff; border: 1px solid #e6dfcc; border-radius: 16px; box-shadow: 0 6px 18px rgba(22, 38, 76, .05); }
+.gm-promo.is-off { background: #fbfaf6; }
+.gm-promo.is-off .gm-promo-banner { filter: grayscale(1); opacity: .6; }
+.gm-promo-banner { display: flex; align-items: center; justify-content: center; height: 140px; background: #16264c; }
+.gm-promo-banner img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.gm-promo-banner.no-image span { padding: 0 20px; text-align: center; font-size: 22px; font-weight: 800; color: #fff; }
+.gm-promo-body { padding: 16px 22px 20px; }
+.gm-promo-name { margin: 0 0 8px; font-size: 17px; font-weight: 800; text-transform: none; color: #16264c; }
+.gm-promo-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 13px; color: #16264c; }
+.gm-promo-label { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: #6b7280; }
+.gm-promo-row input[type="number"] { box-sizing: border-box; width: 72px; height: 32px; padding: 0 8px; border: 1px solid #e6dfcc; border-radius: 8px; text-align: right; font-size: 13px; }
+a.gm-promo-link:link, a.gm-promo-link:visited { overflow: hidden; max-width: 170px; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: #16264c; text-decoration: none; }
+a.gm-promo-link:hover { color: #a6842f; }
+.gm-promo-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 14px; border-top: 1px solid #f1ead8; }
+.gm-promo-foot select { height: 30px; padding: 0 28px 0 12px; border: 0; border-radius: 999px; background-color: #dbeafe; font-size: 12px; font-weight: 700; color: #1e3a8a; cursor: pointer; }
+.gm-promo.is-off .gm-promo-foot select { background-color: #e5e7eb; color: #374151; }
+a.gm-promo-edit:link, a.gm-promo-edit:visited { font-size: 13px; font-weight: 700; color: #16264c; text-decoration: none; }
+a.gm-promo-edit:hover { color: #a6842f; }
+
+/* Create New Promo tile */
+a.gm-promo-new:link, a.gm-promo-new:visited { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 300px; padding: 24px; border: 2px dashed #d9d2bd; border-radius: 16px; text-align: center; text-decoration: none; color: #4b5563; }
+a.gm-promo-new:hover { border-color: #16264c; background: #fff; }
+.gm-promo-plus { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; margin-bottom: 10px; border-radius: 50%; background: #dbe5f8; color: #16264c; }
+.gm-promo-plus::before { content: ""; width: 24px; height: 24px; background: currentColor; -webkit-mask: var(--i-plus) center / contain no-repeat; mask: var(--i-plus) center / contain no-repeat; }
+.gm-promo-new strong { font-size: 18px; font-weight: 800; color: #374151; }
+.gm-promo-new small { font-size: 13px; color: #6b7280; }
+
+/* Pagination and autosave */
+body.model-promo .gm-pagination { margin-top: 8px; padding: 0; border-top: 0; }
+body.gm-autosave .gm-pagination input[name="_save"] { display: none; }
+
 /* ================= Smaller screens ================= */
 @media (max-width: 900px) {
   #container { margin-left: 0; }

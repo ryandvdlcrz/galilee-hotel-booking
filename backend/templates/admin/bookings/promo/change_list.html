@@ -1,0 +1,52 @@
+{% extends "admin/change_list.html" %}
+{% load admin_urls admin_list %}
+
+{% block branding %}
+<span class="gm-panel-title">Promos</span>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block object-tools %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var q = document.getElementById('searchbar');
+      if (q) { q.setAttribute('placeholder', 'Search promos...'); }
+
+      // Save immediately when a status dropdown or order number changes
+      var form = document.getElementById('changelist-form');
+      var save = form && form.querySelector('input[name="_save"]');
+      if (form && save) {
+        document.body.classList.add('gm-autosave');
+        form.querySelectorAll('.gm-promo select, .gm-promo input[type="number"]').forEach(function (el) {
+          el.addEventListener('change', function () { save.click(); });
+        });
+      }
+    });
+  </script>
+{% endblock %}
+
+{% block result_list %}
+  <div class="gm-promo-grid">
+    {% for item in promo_active %}
+      {% include "admin/bookings/promo/promo_card.html" with promo=item.promo form=item.form %}
+    {% endfor %}
+
+    {% if has_add_permission %}
+      <a class="gm-promo-new" href="{% url cl.opts|admin_urlname:'add' %}">
+        <span class="gm-promo-plus"></span>
+        <strong>Create New Promo</strong>
+        <small>Add a new promo banner</small>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if promo_hidden %}
+    <h3 class="gm-section-title">Hidden Promos</h3>
+    <div class="gm-promo-grid">
+      {% for item in promo_hidden %}
+        {% include "admin/bookings/promo/promo_card.html" with promo=item.promo form=item.form %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

@@ -240,12 +240,44 @@ class RoomAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
+class PromoQuickForm(forms.ModelForm):
+    """Quick-edit fields shown on each promo card (Promos list page only)."""
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.Select(choices=[(True, "Active"), (False, "Hidden")]),
+    )
+
+    class Meta:
+        model = Promo
+        fields = ("is_active", "display_order")
+
+
 @admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
     list_display = ("title", "is_active", "display_order", "created_at")
     list_editable = ("is_active", "display_order")
     list_filter = ("is_active",)
+    list_per_page = 50
     search_fields = ("title",)
+
+    def get_changelist_form(self, request, **kwargs):
+        kwargs.setdefault("form", PromoQuickForm)
+        return super().get_changelist_form(request, **kwargs)
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+
+        # Split the promos on this page into Active and Hidden for the card layout.
+        context = getattr(response, "context_data", None)
+        if context and "cl" in context:
+            cl = context["cl"]
+            if cl.formset:
+                items = [{"promo": f.instance, "form": f} for f in cl.formset.forms]
+            else:
+                items = [{"promo": p, "form": None} for p in cl.result_list]
+            context["promo_active"] = [i for i in items if i["promo"].is_active]
+            context["promo_hidden"] = [i for i in items if not i["promo"].is_active]
+        return response
 
 
 def _room_occupancy(today, tomorrow):

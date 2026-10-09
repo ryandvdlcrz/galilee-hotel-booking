@@ -1,0 +1,45 @@
+<article class="gm-promo{% if not promo.is_active %} is-off{% endif %}">
+  {% if form %}{{ form.id }}{% endif %}
+
+  <div class="gm-promo-banner{% if not promo.image %} no-image{% endif %}">
+    {% if promo.image %}
+      <img src="{{ promo.image.url }}" alt="{{ promo.title }}" loading="lazy">
+    {% else %}
+      <span>{{ promo.title }}</span>
+    {% endif %}
+  </div>
+
+  <div class="gm-promo-body">
+    {% if promo.image %}<h4 class="gm-promo-name">{{ promo.title }}</h4>{% endif %}
+
+    <div class="gm-promo-row">
+      <span class="gm-promo-label">Display order</span>
+      {% if form %}{{ form.display_order }}{% else %}<strong>{{ promo.display_order }}</strong>{% endif %}
+    </div>
+    <div class="gm-promo-row">
+      <span class="gm-promo-label">Link</span>
+      {% if promo.link_url %}
+        <a class="gm-promo-link" href="{{ promo.link_url }}" target="_blank" rel="noopener">{{ promo.link_url|truncatechars:28 }}</a>
+      {% else %}
+        <span class="gm-muted">No link</span>
+      {% endif %}
+    </div>
+    <div class="gm-promo-row">
+      <span class="gm-promo-label">Created</span>
+      <strong>{{ promo.created_at|date:"M d, Y" }}</strong>
+    </div>
+
+    <div class="gm-promo-foot">
+      {% if form %}
+        {{ form.is_active }}
+      {% else %}
+        <span class="gm-badge {% if promo.is_active %}gm-badge-visible{% else %}gm-badge-hidden{% endif %}">{% if promo.is_active %}Active{% else %}Hidden{% endif %}</span>
+      {% endif %}
+      <a class="gm-promo-edit" href="{% url 'admin:bookings_promo_change' promo.pk %}">Edit</a>
+    </div>
+
+    {% if form %}
+      {{ form.non_field_errors }}{{ form.is_active.errors }}{{ form.display_order.errors }}
+    {% endif %}
+  </div>
+</article>
