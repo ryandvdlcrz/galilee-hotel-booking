@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
@@ -172,7 +172,7 @@ def _room_occupancy(today, tomorrow):
     total = 0
     occupied = 0
     for rt in RoomType.objects.filter(is_active=True):
-        rt_total = rt.rooms.filter(is_active=True).count()
+        rt_total = rt.bookable_rooms
         total += rt_total
         occupied += min(rt.rooms_booked_for_range(today, tomorrow), rt_total)
     return total, occupied
@@ -205,6 +205,16 @@ class ReservationAdmin(admin.ModelAdmin):
         "checked_out": ("#374151", "#e5e7eb"),
         "cancelled": ("#991b1b", "#fee2e2"),
     }
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        """Room picker: active rooms only, plus any room already assigned to this reservation."""
+        if db_field.name == "rooms":
+            rooms = Room.objects.filter(is_active=True)
+            object_id = request.resolver_match.kwargs.get("object_id")
+            if object_id:
+                rooms = Room.objects.filter(Q(is_active=True) | Q(reservations__pk=object_id))
+            kwargs["queryset"] = rooms.select_related("room_type").distinct()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     # ---- list page columns (display only) ----
 
@@ -309,7 +319,7 @@ def dashboard_index(request, extra_context=None):
     total_rooms = 0
     available_today = 0
     for rt in room_types:
-        rt_total = rt.rooms.filter(is_active=True).count()
+        rt_total = rt.bookable_rooms
         rt_booked = rt.rooms_booked_for_range(today, tomorrow)
         rt_available = max(rt_total - rt_booked, 0)
 

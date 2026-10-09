@@ -92,6 +92,18 @@ class RoomType(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+    @property
+    def bookable_rooms(self):
+        """Rooms customers can actually book.
+
+        Uses active Room records. If this room type has no Room records at all,
+        fall back to total_rooms. If it has records but all are inactive, the
+        result is 0.
+        """
+        if not self.rooms.exists():
+            return self.total_rooms
+        return self.rooms.filter(is_active=True).count()    
+
     def rooms_booked_for_range(self, check_in, check_out, exclude_reservation_id=None):
         """Sum of rooms of this type already reserved for any date overlapping the given range."""
         overlapping = Reservation.objects.filter(
@@ -109,7 +121,8 @@ class RoomType(models.Model):
         return overlapping.aggregate(total=models.Sum("num_rooms"))["total"] or 0
 
     def available_rooms_for_range(self, check_in, check_out, exclude_reservation_id=None):
-         return self.available_rooms_list(check_in, check_out, exclude_reservation_id).count()
+        booked = self.rooms_booked_for_range(check_in, check_out, exclude_reservation_id)
+        return max(self.bookable_rooms - booked, 0)
 
     def available_rooms_list(self, check_in, check_out, exclude_reservation_id=None):
         """Return the queryset of specific Room instances of this type

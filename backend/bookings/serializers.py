@@ -47,6 +47,7 @@ class RoomSerializer(serializers.ModelSerializer):
 class RoomTypeSerializer(serializers.ModelSerializer):
     amenities = AmenitySerializer(many=True, read_only=True)
     images = RoomImageSerializer(many=True, read_only=True)
+    total_rooms = serializers.IntegerField(source="bookable_room", read_only=True)
     available_rooms = serializers.SerializerMethodField()
     available_room_numbers = serializers.SerializerMethodField() 
 
@@ -72,16 +73,16 @@ class RoomTypeSerializer(serializers.ModelSerializer):
     def get_available_rooms(self, obj):
         """Only computed when check_in/check_out are passed as query params
         (e.g. /api/room-types/?check_in=2026-08-20&check_out=2026-08-22).
-        Falls back to total_rooms if no dates were given."""
+        Falls back to the number of bookable rooms if no dates were given."""
         request = self.context.get("request")
         if not request:
-            return obj.total_rooms
+            return obj.bookable_rooms
 
         check_in = request.query_params.get("check_in")
         check_out = request.query_params.get("check_out")
         if check_in and check_out:
             return obj.available_rooms_for_range(check_in, check_out)
-        return obj.total_rooms
+        return obj.bookable_rooms
 
     def get_available_room_numbers(self,obj):
         """Only populated when check_in/check_out are passed as query params.
@@ -183,11 +184,15 @@ class ReservationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"room_ids": f"Room {room.room_number} does not belong to the selected room type."}
                 )
+            if not room.is_active:
+                raise serializers.ValidationError(
+                    {"room_ids": f"Room {room.room_number} is not available for booking."}
+                )
             if not room.is_available_for_range(attrs.get("check_in_date"), attrs.get("check_out_date")):
                 raise serializers.ValidationError(
                     {"room_ids": f"Room {room.room_number} is no longer available for these dates."}
-                )
-        instance = Reservation(**{k: v for k, v in attrs.items() if k != "room_ids"})
+                ) 
+        instance= Reservation(**{k: v for k, v in attrs.items() if k != "room_ids"})
         instance.clean_dates_and_quantity()
         return attrs
 
