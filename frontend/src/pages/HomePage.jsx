@@ -66,12 +66,15 @@ export default function HomePage() {
                 Experience the ultimate fusion of luxury hospitality and high-octane
                 aquatic adventure at the Galilee Wonderland Resort.
               </p>
-              <Link
-                to="/offers"
+              <button
+                onClick={() =>
+                document.getElementById('promos')?.scrollIntoView({ behavior: 'smooth'} )
+                }
                 className="mt-3 inline-block rounded-md border border-white px-4 py-2 text-xs font-semibold hover:bg-white hover:text-[#16264c] sm:mt-4 sm:px-5 sm:py-2.5 sm:text-sm"
-              >
+                >
                 View Promos
-              </Link>
+                
+              </button>
             </div>
           </div>
         </div>
@@ -123,7 +126,9 @@ export default function HomePage() {
 
       {/* --- Promos --- */}
       {!promosLoading && promos.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-16 text-center">
+        <section 
+        id="promos"
+        className="mx-auto max-w-6xl px-6 pb-16 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#a6842f]">
             Limited Time
           </p>
