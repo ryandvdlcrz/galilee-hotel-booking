@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
 import RoomCard from '../components/RoomCard'
 import { getRoomTypes } from '../api/rooms'
@@ -65,6 +66,12 @@ export default function HomePage() {
                 Experience the ultimate fusion of luxury hospitality and high-octane
                 aquatic adventure at the Galilee Wonderland Resort.
               </p>
+              <Link
+                to="/offers"
+                className="mt-3 inline-block rounded-md border border-white px-4 py-2 text-xs font-semibold hover:bg-white hover:text-[#16264c] sm:mt-4 sm:px-5 sm:py-2.5 sm:text-sm"
+              >
+                View Promos
+              </Link>
             </div>
           </div>
         </div>
