@@ -28,8 +28,59 @@ admin.site.register(User, CustomUserAdmin)
 
 @admin.register(Amenity)
 class AmenityAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("amenity_name", "icon_tag", "used_in")
+    list_display_links = ("amenity_name",)
+    list_per_page = 20
     search_fields = ("name",)
+
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .annotate(room_type_count=Count("room_types", distinct=True))
+            .prefetch_related("room_types")
+        )
+
+    # ---- list page columns (display only) ----
+
+    @admin.display(description="Amenity", ordering="name")
+    def amenity_name(self, obj):
+        return format_html(
+            '<div class="gm-am"><span class="gm-am-badge">{}</span><strong>{}</strong></div>',
+            obj.name[:1].upper(), obj.name,
+        )
+
+    @admin.display(description="Icon", ordering="icon")
+    def icon_tag(self, obj):
+        if obj.icon:
+            return format_html('<span class="gm-tag">{}</span>', obj.icon)
+        return format_html('<span class="gm-muted">{}</span>', "No icon")
+
+    @admin.display(description="Used in", ordering="room_type_count")
+    def used_in(self, obj):
+        types = list(obj.room_types.all())
+        if not types:
+            return format_html('<span class="gm-tag gm-tag-off">{}</span>', "Not used")
+        shown = types[:3]
+        pills = format_html_join("", '<span class="gm-pill">{}</span>', ((t.name,) for t in shown))
+        extra = len(types) - len(shown)
+        if extra > 0:
+            return format_html('{}<span class="gm-pill gm-pill-more">+{}</span>', pills, extra)
+        return pills
+
+    # ---- stat cards on top of the list page (read-only queries) ----
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        amenities = Amenity.objects.annotate(room_type_count=Count("room_types", distinct=True))
+        total = amenities.count()
+        in_use = amenities.filter(room_type_count__gt=0).count()
+        extra_context["amenity_stats"] = {
+            "total": total,
+            "in_use": in_use,
+            "unused": total - in_use,
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 class RoomImageInline(admin.TabularInline):

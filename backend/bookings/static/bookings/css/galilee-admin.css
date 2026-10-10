@@ -430,6 +430,40 @@ a.gm-promo-new:hover { border-color: #16264c; background: #fff; }
 body.model-promo .gm-pagination { margin-top: 8px; padding: 0; border-top: 0; }
 body.gm-autosave .gm-pagination input[name="_save"] { display: none; }
 
+/* ================= Amenity list page ================= */
+.gm-accent-green { border-left: 4px solid #16a34a; }
+.gm-accent-amber { border-left: 4px solid #d97706; }
+
+.gm-am { display: flex; align-items: center; gap: 12px; }
+.gm-am-badge { display: flex; flex: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: #f1ead8; font-size: 15px; font-weight: 800; color: #8c6e26; }
+.gm-am strong { font-size: 14px; font-weight: 700; color: #16264c; }
+.gm-tag { display: inline-block; padding: 3px 10px; border-radius: 8px; background: #eef2fb; font-size: 12px; font-weight: 600; color: #16264c; }
+.gm-tag-off { background: #fef3c7; color: #92400e; }
+body.model-amenity .gm-pill { margin: 2px 6px 2px 0; }
+.gm-pill-more { background: #f1ead8; border-color: #e6dfcc; color: #6b7280; }
+
+/* Card */
+body.change-list.model-amenity #changelist { border-radius: 16px; box-shadow: 0 6px 18px rgba(22, 38, 76, .05); overflow: hidden; }
+
+/* Search and bulk actions */
+body.change-list.model-amenity #toolbar { margin: 0; padding: 0; border: 0; background: transparent; }
+body.change-list.model-amenity #changelist-search > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: none; }
+body.change-list.model-amenity #toolbar #searchbar { box-sizing: border-box; width: 280px; height: 40px; padding: 0 12px; border: 1px solid #e6dfcc; border-radius: 10px; background: #faf7f0; font-size: 13px; }
+body.change-list.model-amenity #toolbar form input[type="submit"] { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #16264c; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+body.change-list.model-amenity #changelist .actions { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: #faf7f0; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 12px; color: #6b7280; }
+
+/* Table */
+body.change-list.model-amenity #result_list { width: 100%; border-collapse: collapse; }
+body.change-list.model-amenity #changelist table thead th { padding: 14px 24px; background: #f1ead8; border-top: 1px solid #e6dfcc; border-bottom: 1px solid #e6dfcc; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #16264c; }
+body.change-list.model-amenity #changelist table thead th a:link,
+body.change-list.model-amenity #changelist table thead th a:visited { color: #16264c; }
+body.change-list.model-amenity #changelist table tbody td,
+body.change-list.model-amenity #changelist table tbody th { padding: 14px 24px; border-bottom: 1px solid #f1ead8; font-size: 13px; font-weight: 500; color: #16264c; vertical-align: middle; }
+body.change-list.model-amenity #changelist table tbody a:link,
+body.change-list.model-amenity #changelist table tbody a:visited { color: #16264c; text-decoration: none; }
+body.change-list.model-amenity #result_list tbody tr:not(.selected) { background: #fff; }
+body.change-list.model-amenity #result_list tbody tr:not(.selected):hover > * { background: #faf7f0; }
+
 /* ================= Smaller screens ================= */
 @media (max-width: 900px) {
   #container { margin-left: 0; }
