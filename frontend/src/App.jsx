@@ -9,7 +9,6 @@ import RegisterPage from './pages/RegisterPage'
 import RoomDetailPage from './pages/RoomDetailPage'
 import BookingCheckoutPage from './pages/BookingCheckoutPage'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
-import OffersPage from './pages/OffersPage'
 import ContactPage from './pages/ContactPage'
 import NotFoundPage from './pages/NotFoundPage'
 import TermsPage from './pages/TermsPage'
@@ -45,7 +44,6 @@ function App() {
           }
         />
         <Route path="/find-reservation" element={<FindReservationPage />} />
-        <Route path="/offers" element={<OffersPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

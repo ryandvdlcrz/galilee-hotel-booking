@@ -37,7 +37,6 @@ export default function Navbar() {
         <div className="hidden items-center gap-8 text-sm font-medium text-[#16264c] md:flex">
           <NavLink to="/" className={navLinkClass}>Home</NavLink>
           <NavLink to="/rooms" className={navLinkClass}>Rooms</NavLink>
-          <NavLink to="/offers" className={navLinkClass}>Offers</NavLink>
           <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
         </div>
 
@@ -86,7 +85,6 @@ export default function Navbar() {
           <div className="flex flex-col gap-3 pt-3 text-sm font-medium text-[#16264c]">
             <NavLink to="/" className={navLinkClass} onClick={closeMenu}>Home</NavLink>
             <NavLink to="/rooms" className={navLinkClass} onClick={closeMenu}>Rooms</NavLink>
-            <NavLink to="/offers" className={navLinkClass} onClick={closeMenu}>Offers</NavLink>
             <NavLink to="/contact" className={navLinkClass} onClick={closeMenu}>Contact</NavLink>
 
             {user ? (
