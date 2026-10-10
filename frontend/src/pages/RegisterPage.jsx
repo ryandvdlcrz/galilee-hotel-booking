@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../hooks/useAuth'
 import { toLocalDigits } from '../utils/phone'
 import galileeLogo from '../assets/galilee-logo.jpg'
 
 export default function RegisterPage() {
-  const { register } = useAuth()
+  const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   const [fullName, setFullName] = useState('')
@@ -18,6 +19,25 @@ export default function RegisterPage() {
 
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Google's button only accepts a pixel width, so measure the form and match it.
+  const googleBoxRef = useRef(null)
+  const [googleWidth, setGoogleWidth] = useState(368)
+
+  useEffect(() => {
+    const el = googleBoxRef.current
+    if (!el) return undefined
+
+    const update = () => {
+      const w = Math.round(el.getBoundingClientRect().width)
+      if (w) setGoogleWidth(Math.min(Math.max(w, 200), 400)) // Google allows 200 to 400px
+    }
+
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -52,6 +72,18 @@ export default function RegisterPage() {
       setError(message)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // Signing up with Google uses the same endpoint as logging in: the server
+  // creates the account the first time that Google email is seen.
+  async function handleGoogleSuccess(credentialResponse) {
+    setError('')
+    try {
+      await loginWithGoogle(credentialResponse.credential)
+      navigate('/')
+    } catch (err) {
+      setError('Google sign-up failed. Please try again.')
     }
   }
 
@@ -178,6 +210,28 @@ export default function RegisterPage() {
               {submitting ? 'Creating account…' : 'Create Account'}
               {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
+
+            <div ref={googleBoxRef} className="flex w-full justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google sign-up failed. Please try again.')}
+                text="signup_with"
+                width={String(googleWidth)}
+                locale="en"
+              />
+            </div>
+
+            <p className="text-center text-xs text-gray-400">
+              By continuing with Google, you agree to our{' '}
+              <Link to="/terms" className="font-medium text-[#16264c] hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" className="font-medium text-[#16264c] hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </form>
 
           <div className="mt-6 border-t border-gray-100 pt-6 text-center text-sm text-gray-600">
