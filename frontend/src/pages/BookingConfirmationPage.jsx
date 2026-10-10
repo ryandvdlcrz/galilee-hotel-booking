@@ -1,10 +1,22 @@
 import { useState } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
-import { CheckCircle2, XCircle, Calendar, Users, Phone, Mail, ArrowLeft } from 'lucide-react'
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Calendar,
+  Users,
+  Phone,
+  Mail,
+  ArrowLeft,
+  Copy,
+  Check,
+} from 'lucide-react'
 import { cancelReservation } from '../api/reservations'
 import { formatDate, nightsBetween } from '../utils/formatDate'
 import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 import { getBadge } from '../utils/reservationBadge'
+import CancelReservationModal from '../components/CancelReservationModal'
 
 // Display-only for now — matches the amount shown at checkout, but not
 // yet part of the backend's actual stored total_price. See BookingCheckoutPage.
@@ -18,6 +30,8 @@ export default function BookingConfirmationPage() {
   const [reservation, setReservation] = useState(state?.reservation || null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const room = state?.room
   const adults = state?.adults
@@ -38,10 +52,15 @@ export default function BookingConfirmationPage() {
   const totalDisplay = Number(reservation.total_price) + RESORT_FEE_DISPLAY
   const badge = getBadge(reservation)
   const isCancelled = reservation.status === 'cancelled'
+  const isPending = reservation.status === 'pending'
   const canCancel = ['pending', 'confirmed'].includes(reservation.status)
+  const showCopyReference = canCancel
   const primaryImage = room?.images?.find((img) => img.is_primary) ?? room?.images?.[0]
+  const code = reservation.reservation_code
+  const roomName = reservation.room_type_name || room?.name || ''
 
   // Heading changes with the situation: cancelled, opened from history, or just booked.
+  // For a new booking the wording follows the status staff set in Django Admin.
   const header = isCancelled
     ? {
         Icon: XCircle,
@@ -58,6 +77,14 @@ export default function BookingConfirmationPage() {
         title: 'Booking Details',
         text: 'Review your reservation and manage your stay.',
       }
+    : isPending
+    ? {
+        Icon: Clock,
+        wrap: 'bg-amber-50',
+        color: 'text-amber-600',
+        title: 'Reservation Received!',
+        text: 'Thank you for choosing Galilee Wonderland. Your booking is now waiting for confirmation from our team.',
+      }
     : {
         Icon: CheckCircle2,
         wrap: 'bg-green-50',
@@ -67,15 +94,56 @@ export default function BookingConfirmationPage() {
       }
   const HeaderIcon = header.Icon
 
-  async function handleCancel() {
-    if (!confirm('Are you sure you want to cancel this reservation? This cannot be undone.')) {
-      return
+  // "What's Next?" steps depend on the booking status (no email system, so
+  // everything points to things the guest can do on the site or by phone).
+  const nextStepsByStatus = {
+    pending: [
+      `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
+      'Our team will review your booking and update its status. Check back anytime to see if it has been confirmed.',
+      'Need it sooner? Call our concierge using the number below.',
+    ],
+    confirmed: [
+      `Show your booking reference (#${code}) at the front desk when you arrive.`,
+      `Check-in starts at ${CHECK_IN_TIME} and check-out is by ${CHECK_OUT_TIME}.`,
+      'Need to make a change? Call our concierge using the number below.',
+    ],
+    checked_in: [
+      'Enjoy your stay at Galilee Wonderland!',
+      'Need anything during your stay? Our concierge is just a call away.',
+    ],
+    checked_out: ['Thank you for staying with us. We hope to welcome you back soon.'],
+  }
+  const nextSteps = nextStepsByStatus[reservation.status] ?? nextStepsByStatus.confirmed
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard can be blocked (for example on a non-secure page).
+      // The reference is still shown on screen, so nothing else to do.
     }
+  }
+
+  function openCancelConfirm() {
+    setCancelError('')
+    setConfirmOpen(true)
+  }
+
+  function closeCancelConfirm() {
+    if (cancelling) return
+    setConfirmOpen(false)
+    setCancelError('')
+  }
+
+  async function handleCancel() {
     setCancelling(true)
     setCancelError('')
     try {
       const updated = await cancelReservation(reservation.id)
       setReservation(updated)
+      setConfirmOpen(false)
     } catch (err) {
       setCancelError(
         err.response?.data?.detail || 'Could not cancel this reservation. Please contact support.'
@@ -110,7 +178,7 @@ export default function BookingConfirmationPage() {
                   </div>
                 )}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <p className="text-lg font-bold text-white">{room?.name || 'Room'}</p>
+                  <p className="text-lg font-bold text-white">{roomName || 'Room'}</p>
                 </div>
               </div>
 
@@ -120,7 +188,7 @@ export default function BookingConfirmationPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Booking Reference
                     </p>
-                    <p className="text-lg font-bold text-[#16264c]">#{reservation.reservation_code}</p>
+                    <p className="text-lg font-bold text-[#16264c]">#{code}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}>
                     {badge.label}
@@ -176,22 +244,20 @@ export default function BookingConfirmationPage() {
                     <span>₱{RESORT_FEE_DISPLAY.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-bold text-[#16264c]">
-                    <span>{isCancelled ? 'Total Amount' : 'Total Amount Paid'}</span>
+                    <span>Total Amount</span>
                     <span className={isCancelled ? 'text-gray-400 line-through' : ''}>
                       ₱{totalDisplay.toLocaleString()}
                     </span>
                   </div>
                 </div>
 
-                {cancelError && <p className="mt-3 text-sm text-red-600">{cancelError}</p>}
-
                 {canCancel ? (
                   <button
-                    onClick={handleCancel}
-                    disabled={cancelling}
-                    className="mt-5 w-full rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    type="button"
+                    onClick={openCancelConfirm}
+                    className="mt-5 w-full rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
                   >
-                    {cancelling ? 'Cancelling…' : 'Cancel Reservation'}
+                    Cancel Reservation
                   </button>
                 ) : (
                   <p className="mt-5 text-center text-xs text-gray-400">
@@ -222,15 +288,32 @@ export default function BookingConfirmationPage() {
             ) : (
               <div className="rounded-xl bg-[#16264c] p-6 text-white">
                 <p className="font-semibold">What's Next?</p>
-                <div className="mt-3 flex gap-3 text-sm text-white/80">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">
-                    1
-                  </span>
-                  <span>Check your email for the digital voucher and QR code.</span>
+
+                <div className="mt-3 space-y-3">
+                  {nextSteps.map((step, index) => (
+                    <div key={index} className="flex gap-3 text-sm text-white/80">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">
+                        {index + 1}
+                      </span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
                 </div>
+
+                {showCopyReference && (
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-white/30 py-2.5 text-sm font-semibold hover:bg-white/10"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? 'Copied!' : 'Copy Booking Reference'}
+                  </button>
+                )}
+
                 <Link
                   to="/my-reservations"
-                  className="mt-4 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
+                  className="mt-3 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
                 >
                   Manage My Booking
                 </Link>
@@ -239,8 +322,8 @@ export default function BookingConfirmationPage() {
 
             {!isCancelled && (
               <div className="rounded-xl bg-white p-4 text-xs text-gray-500 shadow-sm">
-                Free cancellation is available up to 48 hours before check-in. Please review our full
-                policy in your confirmation email.
+                Free cancellation is available up to 48 hours before check-in. For questions about our
+                policy, please contact our concierge below.
               </div>
             )}
 
@@ -269,6 +352,15 @@ export default function BookingConfirmationPage() {
           <ArrowLeft className="h-4 w-4" /> {fromHistory ? 'Back to My Bookings' : 'Back to Home'}
         </Link>
       </div>
+
+      <CancelReservationModal
+        open={confirmOpen}
+        roomName={roomName}
+        cancelling={cancelling}
+        error={cancelError}
+        onConfirm={handleCancel}
+        onClose={closeCancelConfirm}
+      />
     </div>
   )
 }
