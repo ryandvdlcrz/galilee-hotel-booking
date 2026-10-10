@@ -18,6 +18,7 @@ export default function RoomDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const hasSearchDates = Boolean(searchParams.get('check_in') && searchParams.get('check_out'))
 
   const [room, setRoom] = useState(null)
   const [otherRooms, setOtherRooms] = useState([])
@@ -235,135 +236,158 @@ export default function RoomDetailPage() {
             </div>
           </div>
 
-          {/* Right: booking widget */}
+          {/* Right: booking widget (only when arriving from Search Availability) */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 rounded-2xl bg-white p-6 shadow-lg">
-              <form onSubmit={handleReserve} className="space-y-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Starting from
-                  </p>
-                  <p className="text-3xl font-bold text-[#16264c]">
-                    ₱{Number(room.price_per_night).toLocaleString()}
-                    <span className="text-sm font-normal text-gray-500"> / night</span>
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-[#16264c]">Check-In</span>
-                    <input
-                      type="date"
-                      required
-                      min={new Date().toISOString().split('T')[0]}
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-[#16264c]">Check-Out</span>
-                    <input
-                      type="date"
-                      required
-                      min={checkIn || new Date().toISOString().split('T')[0]}
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
-                    />
-                  </label>
-                </div>
-
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-[#16264c]">Guests</span>
-                  <div className="flex gap-2">
-                    <select
-                      value={adults}
-                      onChange={(e) => setAdults(Number(e.target.value))}
-                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
-                    >
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>{n} Adult{n > 1 ? 's' : ''}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={children}
-                      onChange={(e) => setChildren(Number(e.target.value))}
-                      className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
-                    >
-                      {[0, 1, 2, 3, 4].map((n) => (
-                        <option key={n} value={n}>{n} Child{n !== 1 ? 'ren' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-                </label>
-                                      {checkIn && checkOut && (
+              {hasSearchDates ? (
+                <form onSubmit={handleReserve} className="space-y-4">
                   <div>
-                    <span className="mb-1 block text-xs font-semibold text-[#16264c]">
-                      Select Room Number{room.capacity > 1 ? '(s)' : ''}
-                    </span>
-                    {availableRoomNumbers.length === 0 ? (
-                      <p className="text-xs text-red-600">No rooms available for these dates.</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {availableRoomNumbers.map((r) => {
-                          const isSelected = selectedRoomIds.includes(r.id)
-                          return (
-                            <button
-                              key={r.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedRoomIds((prev) =>
-                                  isSelected ? prev.filter((id) => id !== r.id) : [...prev, r.id]
-                                )
-                              }}
-                              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                                isSelected
-                                  ? 'border-[#a6842f] bg-[#a6842f] text-white'
-                                  : 'border-gray-200 text-[#16264c] hover:border-[#a6842f]'
-                              }`}
-                            >
-                              Room {r.room_number}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Starting from
+                    </p>
+                    <p className="text-3xl font-bold text-[#16264c]">
+                      ₱{Number(room.price_per_night).toLocaleString()}
+                      <span className="text-sm font-normal text-gray-500"> / night</span>
+                    </p>
                   </div>
-                )}
-                {nights > 0 && (
-                  <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                      <span>
-                        {numRooms} room{numRooms > 1 ? 's' : ''} × ₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
-                      </span>
-                      <span>₱{baseRoomCost.toLocaleString()}</span>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-semibold text-[#16264c]">Check-In</span>
+                      <input
+                        type="date"
+                        required
+                        min={new Date().toISOString().split('T')[0]}
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-semibold text-[#16264c]">Check-Out</span>
+                      <input
+                        type="date"
+                        required
+                        min={checkIn || new Date().toISOString().split('T')[0]}
+                        value={checkOut}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold text-[#16264c]">Guests</span>
+                    <div className="flex gap-2">
+                      <select
+                        value={adults}
+                        onChange={(e) => setAdults(Number(e.target.value))}
+                        className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                      >
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>{n} Adult{n > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={children}
+                        onChange={(e) => setChildren(Number(e.target.value))}
+                        className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                      >
+                        {[0, 1, 2, 3, 4].map((n) => (
+                          <option key={n} value={n}>{n} Child{n !== 1 ? 'ren' : ''}</option>
+                        ))}
+                      </select>
                     </div>
-                    {extraGuests > 0 && (
+                  </label>
+                  {checkIn && checkOut && (
+                    <div>
+                      <span className="mb-1 block text-xs font-semibold text-[#16264c]">
+                        Select Room Number{room.capacity > 1 ? '(s)' : ''}
+                      </span>
+                      {availableRoomNumbers.length === 0 ? (
+                        <p className="text-xs text-red-600">No rooms available for these dates.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {availableRoomNumbers.map((r) => {
+                            const isSelected = selectedRoomIds.includes(r.id)
+                            return (
+                              <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedRoomIds((prev) =>
+                                    isSelected ? prev.filter((id) => id !== r.id) : [...prev, r.id]
+                                  )
+                                }}
+                                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                                  isSelected
+                                    ? 'border-[#a6842f] bg-[#a6842f] text-white'
+                                    : 'border-gray-200 text-[#16264c] hover:border-[#a6842f]'
+                                }`}
+                              >
+                                Room {r.room_number}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {nights > 0 && (
+                    <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
                       <div className="flex justify-between text-gray-600">
                         <span>
-                          {extraGuests} extra guest{extraGuests > 1 ? 's' : ''} × ₱{Number(room.extra_pax_fee).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
+                          {numRooms} room{numRooms > 1 ? 's' : ''} × ₱{Number(room.price_per_night).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
                         </span>
-                        <span>₱{extraGuestFee.toLocaleString()}</span>
+                        <span>₱{baseRoomCost.toLocaleString()}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between pt-1 text-base font-bold text-[#16264c]">
-                      <span>Total</span>
-                      <span>₱{total.toLocaleString()}</span>
+                      {extraGuests > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                          <span>
+                            {extraGuests} extra guest{extraGuests > 1 ? 's' : ''} × ₱{Number(room.extra_pax_fee).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
+                          </span>
+                          <span>₱{extraGuestFee.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between pt-1 text-base font-bold text-[#16264c]">
+                        <span>Total</span>
+                        <span>₱{total.toLocaleString()}</span>
+                      </div>
                     </div>
+                  )}
+
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg bg-[#a6842f] py-3 text-sm font-semibold text-white hover:bg-[#8f7028]"
+                  >
+                    Reserve Now
+                  </button>
+                  <p className="text-center text-xs text-gray-400">No charge until confirmation</p>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Starting from
+                    </p>
+                    <p className="text-3xl font-bold text-[#16264c]">
+                      ₱{Number(room.price_per_night).toLocaleString()}
+                      <span className="text-sm font-normal text-gray-500"> / night</span>
+                    </p>
                   </div>
-                )}
-
-                {error && <p className="text-sm text-red-600">{error}</p>}
-
-                <button
-                  type="submit"
-                  className="w-full rounded-lg bg-[#a6842f] py-3 text-sm font-semibold text-white hover:bg-[#8f7028]"
-                >
-                  Reserve Now
-                </button>
-                <p className="text-center text-xs text-gray-400">No charge until confirmation</p>
-              </form>
+                  <p className="text-sm text-gray-600">
+                    Choose your dates and guests to check live availability and book this room.
+                  </p>
+                  <Link
+                    to="/"
+                    className="block w-full rounded-lg bg-[#16264c] py-3 text-center text-sm font-semibold text-white hover:bg-[#0f1f3d]"
+                  >
+                    Check Availability
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
