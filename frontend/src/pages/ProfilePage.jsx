@@ -76,17 +76,18 @@ const BanknoteIcon = (props) => (
 
 /* ---------- Shared styles + helpers ---------- */
 
-const labelClass = 'mb-2 block text-sm font-semibold tracking-wide text-[#16264c]'
+const labelClass = 'mb-1.5 block text-sm font-semibold tracking-wide text-[#16264c] sm:mb-2'
 const fieldWrap =
-  'flex items-center gap-3 rounded-lg border border-[#16264c]/10 bg-[#faf7f0] px-4 py-3 text-sm text-[#16264c] focus-within:border-[#a6842f]'
+  'flex items-center gap-3 rounded-lg border border-[#16264c]/10 bg-[#faf7f0] px-4 py-3 text-base text-[#16264c] focus-within:border-[#a6842f] sm:text-sm'
 const bareInput = 'w-full bg-transparent outline-none placeholder:text-gray-400'
 const primaryButton =
   'inline-flex items-center justify-center gap-2 rounded-lg bg-[#16264c] px-6 py-3 text-sm font-semibold text-white hover:bg-[#101c38] disabled:opacity-60'
 const secondaryButton =
   'rounded-lg border border-[#16264c]/20 bg-white px-6 py-3 text-sm font-semibold text-[#16264c] hover:bg-[#faf7f0]'
 
+/* Tabs: icon above label on phones, icon beside label from sm up */
 const sidebarItemBase =
-  'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-3 text-sm font-semibold tracking-wide transition-colors sm:gap-3 sm:px-4'
+  'flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2.5 text-center text-xs font-semibold leading-tight tracking-wide transition-colors sm:shrink-0 sm:flex-row sm:justify-start sm:gap-3 sm:whitespace-nowrap sm:px-4 sm:py-3 sm:text-left sm:text-sm'
 const sidebarItemIdle = 'text-[#16264c]/70 hover:bg-[#16264c]/5'
 const sidebarItemActive = 'bg-[#16264c] text-white'
 
@@ -109,12 +110,12 @@ function Message({ message }) {
 
 function Card({ icon, title, children }) {
   return (
-    <section className="mt-6 w-full max-w-3xl rounded-2xl bg-white p-5 shadow-sm sm:p-6 md:mt-10 lg:p-10 xl:max-w-4xl">
-      <h2 className="flex items-center gap-2 border-b border-[#16264c]/10 pb-4 text-lg font-bold text-[#16264c] sm:text-xl">
+    <section className="mt-5 w-full max-w-3xl rounded-2xl bg-white p-4 shadow-sm sm:mt-6 sm:p-6 md:mt-8 lg:p-10 xl:max-w-4xl">
+      <h2 className="flex items-center gap-2 border-b border-[#16264c]/10 pb-3 text-base font-bold text-[#16264c] sm:pb-4 sm:text-xl">
         {icon}
         {title}
       </h2>
-      <div className="pt-6">{children}</div>
+      <div className="pt-5 sm:pt-6">{children}</div>
     </section>
   )
 }
@@ -161,7 +162,7 @@ function PersonalInfoPanel({ user }) {
   return (
     <Card icon={<UserIcon className="h-5 w-5" />} title="Personal Information">
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
           <div>
             <label className={labelClass}>First Name</label>
             <div className={fieldWrap}>
@@ -212,7 +213,7 @@ function PersonalInfoPanel({ user }) {
 
         <Message message={message} />
 
-        <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[#16264c]/10 pt-6 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex flex-col-reverse gap-3 border-t border-[#16264c]/10 pt-5 sm:mt-8 sm:flex-row sm:justify-end sm:pt-6">
           <button type="button" onClick={handleCancel} className={`${secondaryButton} w-full sm:w-auto`}>
             Cancel
           </button>
@@ -240,7 +241,7 @@ function SecurityPanel() {
   const [deleteError, setDeleteError] = useState('')
 
   const passwordInput =
-    'w-full rounded-lg border border-[#16264c]/15 bg-white px-4 py-3 text-sm text-[#16264c] placeholder:text-gray-400 focus:border-[#a6842f] focus:outline-none'
+    'w-full rounded-lg border border-[#16264c]/15 bg-white px-4 py-3 text-base text-[#16264c] placeholder:text-gray-400 focus:border-[#a6842f] focus:outline-none sm:text-sm'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -288,7 +289,7 @@ function SecurityPanel() {
   return (
     <>
       <Card title="Change Password">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label className={labelClass}>Current Password</label>
             <input
@@ -333,9 +334,9 @@ function SecurityPanel() {
         </form>
       </Card>
 
-      <section className="mt-6 w-full max-w-3xl rounded-2xl bg-white p-5 shadow-sm sm:p-6 lg:p-10 xl:max-w-4xl">
-        <h2 className="text-lg font-bold text-red-700 sm:text-xl">Delete Account</h2>
-        <div className="mt-5 rounded-lg border border-[#16264c]/10 bg-white p-5">
+      <section className="mt-5 w-full max-w-3xl rounded-2xl bg-white p-4 shadow-sm sm:mt-6 sm:p-6 lg:p-10 xl:max-w-4xl">
+        <h2 className="text-base font-bold text-red-700 sm:text-xl">Delete Account</h2>
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50/40 p-4 sm:mt-5 sm:p-5">
           <p className="text-sm text-gray-600">
             Once you delete your account, there is no going back. Please be certain. All your
             data, bookings, and personal information will be permanently removed from our servers.
@@ -345,7 +346,7 @@ function SecurityPanel() {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="mt-5 w-full rounded-md bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60 sm:w-auto"
+            className="mt-5 w-full rounded-md bg-red-700 px-5 py-3 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60 sm:w-auto sm:py-2.5"
           >
             {deleting ? 'Deleting…' : 'Delete Account'}
           </button>
@@ -389,14 +390,14 @@ function BookingsPanel() {
     })
   }
 
-  if (loading) return <p className="mt-6 text-sm text-gray-500 md:mt-10">Loading your bookings…</p>
-  if (error) return <p className="mt-6 text-sm text-red-600 md:mt-10">{error}</p>
+  if (loading) return <p className="mt-5 text-sm text-gray-500 md:mt-8">Loading your bookings…</p>
+  if (error) return <p className="mt-5 text-sm text-red-600 md:mt-8">{error}</p>
 
   if (reservations.length === 0) {
     return (
-      <div className="mt-6 max-w-4xl rounded-2xl bg-white p-6 text-center shadow-sm md:mt-10 md:p-10">
+      <div className="mt-5 max-w-4xl rounded-2xl bg-white p-6 text-center shadow-sm md:mt-8 md:p-10">
         <p className="text-sm text-gray-500">You don't have any bookings yet.</p>
-        <Link to="/rooms" className={`${primaryButton} mt-4`}>
+        <Link to="/rooms" className={`${primaryButton} mt-4 w-full sm:w-auto`}>
           Browse Rooms
         </Link>
       </div>
@@ -406,7 +407,7 @@ function BookingsPanel() {
   const sorted = [...reservations].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date))
 
   return (
-    <div className="mt-6 max-w-4xl space-y-6 md:mt-10 md:space-y-8">
+    <div className="mt-5 max-w-4xl space-y-4 md:mt-8 md:space-y-8">
       {sorted.map((r) => {
         const badge = getBadge(r)
         const cancelled = r.status === 'cancelled'
@@ -417,7 +418,7 @@ function BookingsPanel() {
             className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm sm:min-h-[234px] sm:flex-row"
           >
             {/* Image column: photo is absolute so it never sets the card height */}
-            <div className="relative h-48 shrink-0 bg-gray-100 sm:h-auto sm:w-[240px] lg:w-[300px]">
+            <div className="relative h-40 shrink-0 bg-gray-100 sm:h-auto sm:w-[240px] lg:w-[300px]">
               {r.room_type_image ? (
                 <img
                   src={r.room_type_image}
@@ -430,19 +431,19 @@ function BookingsPanel() {
                 </div>
               )}
               <span
-                className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${badge.className}`}
+                className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide sm:left-4 sm:top-4 ${badge.className}`}
               >
                 {badge.label}
               </span>
             </div>
 
             {/* Text column */}
-            <div className="flex flex-1 flex-col justify-center px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
-              <h3 className={`text-xl font-bold sm:text-2xl ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
+            <div className="flex flex-1 flex-col justify-center px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+              <h3 className={`text-lg font-bold sm:text-2xl ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
                 {r.room_type_name}
               </h3>
 
-              <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
+              <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600 sm:mt-3">
                 <CalendarIcon className="h-4 w-4" />
                 {formatDate(r.check_in_date)} - {formatDate(r.check_out_date)}
               </p>
@@ -464,7 +465,7 @@ function BookingsPanel() {
               <button
                 type="button"
                 onClick={() => viewDetails(r)}
-                className="mt-6 w-full rounded-lg border border-[#16264c]/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wide text-[#16264c] hover:bg-[#faf7f0] sm:w-fit"
+                className="mt-4 w-full rounded-lg border border-[#16264c]/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wide text-[#16264c] hover:bg-[#faf7f0] sm:mt-6 sm:w-fit"
               >
                 View Details
               </button>
@@ -510,10 +511,10 @@ export default function ProfilePage({ initialTab = 'info' }) {
 
   return (
     <div className="bg-[#faf7f0]">
-      <div className="mx-auto flex max-w-7xl flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
-        {/* --- Sidebar --- */}
-        <aside className="flex flex-col border-b border-[#16264c]/10 bg-[#f5f1ea] p-3 sm:p-4 lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r lg:py-8">
-          <nav className="grid grid-cols-1 gap-2 sm:flex sm:overflow-x-auto lg:flex-col lg:overflow-visible">
+      <div className="mx-auto flex max-w-6xl flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
+        {/* --- Sidebar (tab bar on phones and tablets) --- */}
+        <aside className="flex flex-col border-b border-[#16264c]/10 bg-[#f5f1ea] p-2 sm:p-4 lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r lg:py-8">
+          <nav className="grid grid-cols-3 gap-1.5 sm:flex sm:gap-2 sm:overflow-x-auto lg:flex-col lg:overflow-visible">
             <button
               type="button"
               onClick={() => setTab('info')}
@@ -542,7 +543,8 @@ export default function ProfilePage({ initialTab = 'info' }) {
             </button>
           </nav>
 
-          <div className="mt-3 border-t border-[#16264c]/10 pt-3 lg:mt-auto">
+          {/* Log Out in the sidebar: desktop only */}
+          <div className="hidden border-t border-[#16264c]/10 pt-3 lg:mt-auto lg:block">
             <button
               type="button"
               onClick={handleLogout}
@@ -555,13 +557,23 @@ export default function ProfilePage({ initialTab = 'info' }) {
         </aside>
 
         {/* --- Main content --- */}
-        <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-12 lg:py-14">
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-10 lg:px-12 lg:py-14">
           <h1 className="text-2xl font-extrabold text-[#16264c] sm:text-3xl lg:text-4xl">{copy.title}</h1>
-          <p className="mt-2 text-sm text-gray-600 lg:text-base">{copy.subtitle}</p>
+          <p className="mt-1.5 text-sm text-gray-600 sm:mt-2 lg:text-base">{copy.subtitle}</p>
 
           {tab === 'info' && <PersonalInfoPanel user={user} />}
           {tab === 'bookings' && <BookingsPanel />}
           {tab === 'security' && <SecurityPanel />}
+
+          {/* Log Out at the bottom of the page: phones and tablets only */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-red-700 lg:hidden"
+          >
+            <LogoutIcon className="h-5 w-5" />
+            Log Out
+          </button>
         </main>
       </div>
     </div>
