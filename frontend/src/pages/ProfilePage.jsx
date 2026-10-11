@@ -92,7 +92,7 @@ const secondaryButton =
   'rounded-lg border border-[#16264c]/20 bg-white px-6 py-3 text-sm font-semibold text-[#16264c] hover:bg-[#faf7f0]'
 
 const sidebarItemBase =
-  'flex items-center gap-3 whitespace-nowrap rounded-lg px-4 py-3 text-sm font-semibold tracking-wide transition-colors'
+  'flex shrink-0 items-center gap-3 whitespace-nowrap rounded-lg px-4 py-3 text-sm font-semibold tracking-wide transition-colors'
 const sidebarItemIdle = 'text-[#16264c]/70 hover:bg-[#16264c]/5'
 const sidebarItemActive = 'bg-[#16264c] text-white'
 
@@ -115,8 +115,8 @@ function Message({ message }) {
 
 function Card({ icon, title, children }) {
   return (
-    <section className="mt-10 max-w-3xl rounded-2xl bg-white p-6 shadow-sm md:p-10">
-      <h2 className="flex items-center gap-2 border-b border-[#16264c]/10 pb-4 text-xl font-bold text-[#16264c]">
+    <section className="mt-6 w-full max-w-3xl rounded-2xl bg-white p-5 shadow-sm sm:p-6 md:mt-10 lg:p-10 xl:max-w-4xl">
+      <h2 className="flex items-center gap-2 border-b border-[#16264c]/10 pb-4 text-lg font-bold text-[#16264c] sm:text-xl">
         {icon}
         {title}
       </h2>
@@ -218,11 +218,11 @@ function PersonalInfoPanel({ user }) {
 
         <Message message={message} />
 
-        <div className="mt-8 flex justify-end gap-3 border-t border-[#16264c]/10 pt-6">
-          <button type="button" onClick={handleCancel} className={secondaryButton}>
+        <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[#16264c]/10 pt-6 sm:flex-row sm:justify-end">
+          <button type="button" onClick={handleCancel} className={`${secondaryButton} w-full sm:w-auto`}>
             Cancel
           </button>
-          <button type="submit" disabled={saving} className={primaryButton}>
+          <button type="submit" disabled={saving} className={`${primaryButton} w-full sm:w-auto`}>
             <SaveIcon className="h-4 w-4" />
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
@@ -332,15 +332,15 @@ function SecurityPanel() {
           <Message message={message} />
 
           <div className="flex justify-end pt-2">
-            <button type="submit" disabled={saving} className={primaryButton}>
+            <button type="submit" disabled={saving} className={`${primaryButton} w-full sm:w-auto`}>
               {saving ? 'Updating…' : 'Update Password'}
             </button>
           </div>
         </form>
       </Card>
 
-      <section className="mt-6 max-w-3xl rounded-2xl bg-white p-6 shadow-sm md:p-10">
-        <h2 className="text-xl font-bold text-red-700">Delete Account</h2>
+      <section className="mt-6 w-full max-w-3xl rounded-2xl bg-white p-5 shadow-sm sm:p-6 lg:p-10 xl:max-w-4xl">
+        <h2 className="text-lg font-bold text-red-700 sm:text-xl">Delete Account</h2>
         <div className="mt-5 rounded-lg border border-[#16264c]/10 bg-white p-5">
           <p className="text-sm text-gray-600">
             Once you delete your account, there is no going back. Please be certain. All your
@@ -351,7 +351,7 @@ function SecurityPanel() {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="mt-5 rounded-md bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+            className="mt-5 w-full rounded-md bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60 sm:w-auto"
           >
             {deleting ? 'Deleting…' : 'Delete Account'}
           </button>
@@ -395,12 +395,12 @@ function BookingsPanel() {
     })
   }
 
-  if (loading) return <p className="mt-10 text-sm text-gray-500">Loading your bookings…</p>
-  if (error) return <p className="mt-10 text-sm text-red-600">{error}</p>
+  if (loading) return <p className="mt-6 text-sm text-gray-500 md:mt-10">Loading your bookings…</p>
+  if (error) return <p className="mt-6 text-sm text-red-600 md:mt-10">{error}</p>
 
   if (reservations.length === 0) {
     return (
-      <div className="mt-10 max-w-4xl rounded-2xl bg-white p-10 text-center shadow-sm">
+      <div className="mt-6 max-w-4xl rounded-2xl bg-white p-6 text-center shadow-sm md:mt-10 md:p-10">
         <p className="text-sm text-gray-500">You don't have any bookings yet.</p>
         <Link to="/rooms" className={`${primaryButton} mt-4`}>
           Browse Rooms
@@ -412,7 +412,7 @@ function BookingsPanel() {
   const sorted = [...reservations].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date))
 
   return (
-    <div className="mt-10 max-w-4xl space-y-8">
+    <div className="mt-6 max-w-4xl space-y-6 md:mt-10 md:space-y-8">
       {sorted.map((r) => {
         const badge = getBadge(r)
         const cancelled = r.status === 'cancelled'
@@ -423,7 +423,7 @@ function BookingsPanel() {
             className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm sm:min-h-[234px] sm:flex-row"
           >
             {/* Image column: photo is absolute so it never sets the card height */}
-            <div className="relative h-48 shrink-0 bg-gray-100 sm:h-auto sm:w-[300px]">
+            <div className="relative h-48 shrink-0 bg-gray-100 sm:h-auto sm:w-[240px] lg:w-[300px]">
               {r.room_type_image ? (
                 <img
                   src={r.room_type_image}
@@ -443,12 +443,12 @@ function BookingsPanel() {
             </div>
 
             {/* Text column */}
-            <div className="flex flex-1 flex-col justify-center px-8 py-6">
-              <h3 className={`text-2xl font-bold ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
+            <div className="flex flex-1 flex-col justify-center px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
+              <h3 className={`text-xl font-bold sm:text-2xl ${cancelled ? 'text-gray-500' : 'text-[#16264c]'}`}>
                 {r.room_type_name}
               </h3>
 
-              <p className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+              <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
                 <CalendarIcon className="h-4 w-4" />
                 {formatDate(r.check_in_date)} - {formatDate(r.check_out_date)}
               </p>
@@ -470,7 +470,7 @@ function BookingsPanel() {
               <button
                 type="button"
                 onClick={() => viewDetails(r)}
-                className="mt-6 w-fit rounded-lg border border-[#16264c]/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wide text-[#16264c] hover:bg-[#faf7f0]"
+                className="mt-6 w-full rounded-lg border border-[#16264c]/20 bg-white px-5 py-2.5 text-xs font-semibold tracking-wide text-[#16264c] hover:bg-[#faf7f0] sm:w-fit"
               >
                 View Details
               </button>
@@ -528,10 +528,10 @@ export default function ProfilePage({ initialTab = 'info' }) {
 
   return (
     <div className="bg-[#faf7f0]">
-      <div className="mx-auto flex max-w-6xl flex-col md:min-h-[calc(100vh-5rem)] md:flex-row">
+      <div className="mx-auto flex max-w-7xl flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
         {/* --- Sidebar --- */}
-        <aside className="flex flex-col border-b border-[#16264c]/10 bg-[#f5f1ea] p-4 md:w-64 md:shrink-0 md:border-b-0 md:border-r md:py-8">
-          <nav className="flex gap-2 overflow-x-auto md:flex-col">
+        <aside className="flex flex-col border-b border-[#16264c]/10 bg-[#f5f1ea] p-3 sm:p-4 lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r lg:py-8">
+          <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
             <button
               type="button"
               onClick={() => setTab('info')}
@@ -569,7 +569,7 @@ export default function ProfilePage({ initialTab = 'info' }) {
             </button>
           </nav>
 
-          <div className="mt-3 border-t border-[#16264c]/10 pt-3 md:mt-auto">
+          <div className="mt-3 border-t border-[#16264c]/10 pt-3 lg:mt-auto">
             <button
               type="button"
               onClick={handleLogout}
@@ -582,9 +582,9 @@ export default function ProfilePage({ initialTab = 'info' }) {
         </aside>
 
         {/* --- Main content --- */}
-        <main className="flex-1 px-6 py-10 md:px-12 md:py-14">
-          <h1 className="text-3xl font-extrabold text-[#16264c] md:text-4xl">{copy.title}</h1>
-          <p className="mt-2 text-sm text-gray-600 md:text-base">{copy.subtitle}</p>
+        <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-12 lg:py-14">
+          <h1 className="text-2xl font-extrabold text-[#16264c] sm:text-3xl lg:text-4xl">{copy.title}</h1>
+          <p className="mt-2 text-sm text-gray-600 lg:text-base">{copy.subtitle}</p>
 
           {tab === 'info' && <PersonalInfoPanel user={user} />}
           {tab === 'bookings' && <BookingsPanel />}
