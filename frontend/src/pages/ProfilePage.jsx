@@ -41,12 +41,6 @@ const ShieldIcon = (props) => (
     <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
   </Icon>
 )
-const BellIcon = (props) => (
-  <Icon {...props}>
-    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-  </Icon>
-)
 const LogoutIcon = (props) => (
   <Icon {...props}>
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -92,7 +86,7 @@ const secondaryButton =
   'rounded-lg border border-[#16264c]/20 bg-white px-6 py-3 text-sm font-semibold text-[#16264c] hover:bg-[#faf7f0]'
 
 const sidebarItemBase =
-  'flex shrink-0 items-center gap-3 whitespace-nowrap rounded-lg px-4 py-3 text-sm font-semibold tracking-wide transition-colors'
+  'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-3 text-sm font-semibold tracking-wide transition-colors sm:gap-3 sm:px-4'
 const sidebarItemIdle = 'text-[#16264c]/70 hover:bg-[#16264c]/5'
 const sidebarItemActive = 'bg-[#16264c] text-white'
 
@@ -482,14 +476,6 @@ function BookingsPanel() {
   )
 }
 
-function NotificationsPanel() {
-  return (
-    <Card icon={<BellIcon className="h-5 w-5" />} title="Notifications">
-      <p className="text-sm text-gray-600">Notification preferences are coming soon.</p>
-    </Card>
-  )
-}
-
 /* ---------- Page ---------- */
 
 const PAGE_COPY = {
@@ -504,10 +490,6 @@ const PAGE_COPY = {
   security: {
     title: 'Account Security',
     subtitle: 'Manage your password and protect your account.',
-  },
-  notifications: {
-    title: 'Notifications',
-    subtitle: 'Choose how you want to hear from us.',
   },
 }
 
@@ -531,7 +513,7 @@ export default function ProfilePage({ initialTab = 'info' }) {
       <div className="mx-auto flex max-w-7xl flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
         {/* --- Sidebar --- */}
         <aside className="flex flex-col border-b border-[#16264c]/10 bg-[#f5f1ea] p-3 sm:p-4 lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r lg:py-8">
-          <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+          <nav className="grid grid-cols-1 gap-2 sm:flex sm:overflow-x-auto lg:flex-col lg:overflow-visible">
             <button
               type="button"
               onClick={() => setTab('info')}
@@ -558,15 +540,6 @@ export default function ProfilePage({ initialTab = 'info' }) {
               <ShieldIcon className="h-5 w-5" />
               Account Security
             </button>
-
-            <button
-              type="button"
-              onClick={() => setTab('notifications')}
-              className={`${sidebarItemBase} ${tab === 'notifications' ? sidebarItemActive : sidebarItemIdle}`}
-            >
-              <BellIcon className="h-5 w-5" />
-              Notifications
-            </button>
           </nav>
 
           <div className="mt-3 border-t border-[#16264c]/10 pt-3 lg:mt-auto">
@@ -589,7 +562,6 @@ export default function ProfilePage({ initialTab = 'info' }) {
           {tab === 'info' && <PersonalInfoPanel user={user} />}
           {tab === 'bookings' && <BookingsPanel />}
           {tab === 'security' && <SecurityPanel />}
-          {tab === 'notifications' && <NotificationsPanel />}
         </main>
       </div>
     </div>
