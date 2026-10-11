@@ -1,0 +1,75 @@
+{% extends "admin/change_list.html" %}
+{% load admin_urls admin_list %}
+
+{% block branding %}
+<span class="gm-panel-title">User Management</span>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block object-tools %}
+  <div class="gm-page-actions">
+    {% if cl.has_filters %}
+      <button type="button" class="gm-btn-ghost" id="gm-filters-toggle">Filters</button>
+    {% endif %}
+    {% if has_add_permission %}
+      <a class="gm-btn-primary" href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}">New User</a>
+    {% endif %}
+  </div>
+
+  {% if user_stats and not is_popup %}
+  <div class="gm-stats">
+    <div class="gm-stat">
+      <div>
+        <p class="gm-stat-label">Total Users</p>
+        <p class="gm-stat-value">{{ user_stats.total }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-accent-green">
+      <div>
+        <p class="gm-stat-label">Guests</p>
+        <p class="gm-stat-value">{{ user_stats.guests }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-accent-navy">
+      <div>
+        <p class="gm-stat-label">Staff</p>
+        <p class="gm-stat-value">{{ user_stats.staff }}</p>
+      </div>
+    </div>
+    <div class="gm-stat gm-accent-amber">
+      <div>
+        <p class="gm-stat-label">New This Month</p>
+        <p class="gm-stat-value">{{ user_stats.new_this_month }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var btn = document.getElementById('gm-filters-toggle');
+      if (btn) {
+        btn.addEventListener('click', function () {
+          document.body.classList.toggle('gm-filters-open');
+        });
+      }
+      var q = document.getElementById('searchbar');
+      if (q) { q.setAttribute('placeholder', 'Search users...'); }
+    });
+  </script>
+{% endblock %}
+
+{% block search %}
+  <div class="gm-list-head">
+    <h3>Users</h3>
+    {% search_form cl %}
+  </div>
+  {% if user_tabs and not is_popup %}
+  <div class="gm-tabs">
+    {% for tab in user_tabs %}
+      <a href="{{ tab.url }}" class="gm-tab{% if tab.active %} is-active{% endif %}">{{ tab.label }} <span>{{ tab.count }}</span></a>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}

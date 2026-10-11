@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django import forms
 from django.contrib import admin
@@ -18,8 +19,121 @@ class UserProfileInline(admin.StackedInline):
     extra = 0
 
 
+def _initial(text):
+    """First letter or digit of a text, uppercased (skips characters like '@')."""
+    return next((c for c in text if c.isalnum()), "?").upper()
+
+
 class CustomUserAdmin(UserAdmin):
     inlines = [UserProfileInline]
+    list_display = ("user_card", "phone_number", "role_pill", "bookings", "joined_on", "active_pill")
+    list_display_links = ("user_card",)
+    list_per_page = 15
+
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related("profile")
+            .annotate(booking_count=Count("reservations", distinct=True))
+        )
+
+    # ---- list page columns (display only) ----
+
+    @admin.display(description="User", ordering="username")
+    def user_card(self, obj):
+        primary = obj.get_full_name().strip() or obj.username
+        if obj.first_name and obj.last_name:
+            initials = _initial(obj.first_name) + _initial(obj.last_name)
+        else:
+            initials = _initial(primary)
+        secondary = (
+            format_html("<small>{}</small>", obj.email)
+            if obj.email and obj.email != primary
+            else ""
+        )
+        return format_html(
+            '<div class="gm-uc"><span class="gm-uc-badge">{}</span>'
+            "<div><strong>{}</strong>{}</div></div>",
+            initials, primary, secondary,
+        )
+
+    @admin.display(description="Phone")
+    def phone_number(self, obj):
+        profile = getattr(obj, "profile", None)
+        phone = profile.phone if profile else ""
+        return phone or format_html('<span class="gm-muted">{}</span>', "-")
+
+    @admin.display(description="Role", ordering="is_staff")
+    def role_pill(self, obj):
+        if obj.is_superuser:
+            key, label = "superuser", "Superuser"
+        elif obj.is_staff:
+            key, label = "staff", "Staff"
+        else:
+            key, label = "guest", "Guest"
+        return format_html('<span class="gm-badge gm-role-{}">{}</span>', key, label)
+
+    @admin.display(description="Bookings", ordering="booking_count")
+    def bookings(self, obj):
+        return obj.booking_count
+
+    @admin.display(description="Joined", ordering="date_joined")
+    def joined_on(self, obj):
+        return timezone.localtime(obj.date_joined).strftime("%b %d, %Y")
+
+    @admin.display(description="Status", ordering="is_active")
+    def active_pill(self, obj):
+        if obj.is_active:
+            return format_html('<span class="gm-badge gm-badge-visible">{}</span>', "Active")
+        return format_html('<span class="gm-badge gm-badge-hidden">{}</span>', "Inactive")
+
+    # ---- stat cards and tabs on top of the list page (read-only queries) ----
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        users = User.objects.all()
+        total = users.count()
+        staff = users.filter(is_staff=True).count()
+        inactive = users.filter(is_active=False).count()
+        month_start = timezone.localdate().replace(day=1)
+
+        extra_context["user_stats"] = {
+            "total": total,
+            "guests": total - staff,
+            "staff": staff,
+            "new_this_month": users.filter(date_joined__date__gte=month_start).count(),
+        }
+
+        # Tabs reuse Django's own filters (is_staff / is_active) and keep any search text.
+        query = request.GET.get("q", "")
+
+        def tab_url(**filters):
+            params = {"q": query} if query else {}
+            params.update(filters)
+            return "?" + urlencode(params) if params else "?"
+
+        staff_param = request.GET.get("is_staff__exact")
+        active_param = request.GET.get("is_active__exact")
+        extra_context["user_tabs"] = [
+            {
+                "label": "All", "count": total, "url": tab_url(),
+                "active": staff_param is None and active_param is None,
+            },
+            {
+                "label": "Guests", "count": total - staff,
+                "url": tab_url(is_staff__exact=0), "active": staff_param == "0",
+            },
+            {
+                "label": "Staff", "count": staff,
+                "url": tab_url(is_staff__exact=1), "active": staff_param == "1",
+            },
+            {
+                "label": "Inactive", "count": inactive,
+                "url": tab_url(is_active__exact=0), "active": active_param == "0",
+            },
+        ]
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 admin.site.unregister(User)
