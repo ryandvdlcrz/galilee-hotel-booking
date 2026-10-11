@@ -27,8 +27,8 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#faf7f0]/95 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-        <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
+      <nav className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:grid md:grid-cols-[1fr_auto_1fr] lg:px-10">
+        <Link to="/" className="flex items-center gap-2 justify-self-start" onClick={closeMenu}>
           <img src={galileeLogo} alt="Galilee Wonderland" className="h-8 w-8 rounded-full" />
           <span className="text-base font-bold text-[#16264c] sm:text-lg">Galilee Mansion</span>
         </Link>
@@ -41,7 +41,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop right side */}
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-4 justify-self-end md:flex">
           {user ? (
             <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm font-medium text-[#16264c]">
               <ProfileIcon />
