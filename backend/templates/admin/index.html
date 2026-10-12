@@ -96,7 +96,7 @@
             <td>{{ r.room_type.name }}</td>
             <td>₱{{ r.total_price|floatformat:"2g" }}</td>
             <td><span class="gm-badge gm-badge-{{ r.status }}">{{ r.get_status_display }}</span></td>
-            <td class="gm-actions"><a class="gm-eye" href="{% url 'admin:bookings_reservation_change' r.pk %}" title="Open reservation"></a></td>
+            <td class="gm-actions"><a class="gm-view" href="{% url 'admin:bookings_reservation_change' r.pk %}" aria-label="View reservation {{ r.reservation_code }}">View</a></td>          
           </tr>
           {% empty %}
           <tr><td colspan="5" class="gm-empty-cell">No reservations yet.</td></tr>
