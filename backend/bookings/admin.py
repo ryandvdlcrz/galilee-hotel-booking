@@ -3,11 +3,13 @@ from urllib.parse import urlencode
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
+from rest_framework.authtoken.models import Token, TokenProxy
 
 from .models import Amenity, RoomType, RoomImage, Room, Reservation, Promo, UserProfile
 
@@ -36,6 +38,14 @@ class CustomUserAdmin(UserAdmin):
             .select_related("profile")
             .annotate(booking_count=Count("reservations", distinct=True))
         )
+
+    def get_fieldsets(self, request, obj=None):
+        """Hide the Groups field on the User edit form."""
+        fieldsets = super().get_fieldsets(request, obj)
+        return [
+            (name, {**opts, "fields": tuple(f for f in opts["fields"] if f != "groups")})
+            for name, opts in fieldsets
+        ]
 
     # ---- list page columns (display only) ----
 
@@ -138,6 +148,16 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+
+# Hide Groups and Auth Token from the admin sidebar.
+# DRF registers TokenProxy in newer versions and Token in older ones, so try both.
+admin.site.unregister(Group)
+
+for token_model in (Token, TokenProxy):
+    try:
+        admin.site.unregister(token_model)
+    except NotRegistered:
+        pass
 
 
 @admin.register(Amenity)
