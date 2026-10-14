@@ -485,7 +485,7 @@ class ReservationAdmin(admin.ModelAdmin):
         "stay_dates",
         "guests",
         "status_badge",
-        "payment_badge",
+        "payment_method_pill",
         "amount",
     )
     list_display_links = ("res_id", "guest_name")
@@ -511,12 +511,6 @@ class ReservationAdmin(admin.ModelAdmin):
         "checked_in": ("#1e3a8a", "#dbeafe"),
         "checked_out": ("#374151", "#e5e7eb"),
         "cancelled": ("#991b1b", "#fee2e2"),
-    }
-
-    PAYMENT_COLORS = {
-        "pending": ("#92400e", "#fef3c7"),
-        "verified": ("#166534", "#dcfce7"),
-        "rejected": ("#991b1b", "#fee2e2"),
     }
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -562,14 +556,30 @@ class ReservationAdmin(admin.ModelAdmin):
             fg, bg, obj.get_status_display(),
         )
 
-    @admin.display(description="Payment", ordering="payment_status")
-    def payment_badge(self, obj):
-        fg, bg = self.PAYMENT_COLORS.get(obj.payment_status, ("#374151", "#e5e7eb"))
+    @admin.display(description="Mode of Payment", ordering="payment_method")
+    def payment_method_pill(self, obj):
+        pill = (
+            "display:inline-flex;align-items:center;gap:6px;padding:4px 12px;"
+            "border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;"
+            "border:1px solid {border};background:{bg};color:{fg};"
+        )
+        if obj.payment_method == Reservation.PaymentMethod.GCASH:
+            return format_html(
+                '<span style="{}">'
+                '<span style="display:inline-flex;align-items:center;justify-content:center;'
+                'width:16px;height:16px;border-radius:50%;background:#1d6bf3;color:#fff;'
+                'font-size:10px;font-weight:700;">G</span>'
+                'GCash E-Wallet</span>',
+                pill.format(border="#bfdbfe", bg="#eff6ff", fg="#1e3a8a"),
+            )
         return format_html(
-            '<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
-            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>'
-            '<span class="gm-cell-sub">{}</span>',
-            fg, bg, obj.get_payment_status_display(), obj.get_payment_method_display(),
+            '<span style="{}">'
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/>'
+            '<path d="M6 12h.01M18 12h.01"/></svg>'
+            'Cash In (Counter)</span>',
+            pill.format(border="#a7f3d0", bg="#ecfdf5", fg="#065f46"),
         )
 
     @admin.display(description="Amount", ordering="total_price")
