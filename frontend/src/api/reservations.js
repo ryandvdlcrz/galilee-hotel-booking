@@ -30,8 +30,10 @@ export async function lookupReservation(reservationCode, email) {
   return data
 }
 
-/** Cancel a reservation (self-service, only for pending/confirmed bookings). */
-export async function cancelReservation(id) {
-  const { data } = await client.post(`/reservations/${id}/cancel/`)
+/** Cancel a reservation (self-service, only for pending/confirmed bookings).
+ * Guests (no account) must pass { reservation_code, email } as proof of
+ * ownership. Logged-in users can omit it. */
+export async function cancelReservation(id, guest = {}) {
+  const { data } = await client.post(`/reservations/${id}/cancel/`, guest)
   return data
 }

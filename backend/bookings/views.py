@@ -108,12 +108,37 @@ class ReservationLookupView(APIView):
 
 
 class CancelReservationView(APIView):
-    """POST /api/reservations/<id>/cancel/"""
+    """POST /api/reservations/<id>/cancel/
 
-    permission_classes = [permissions.IsAuthenticated]
+    Logged-in users cancel their own reservations. Guests (no account) must
+    send the reservation code AND the email they booked with, the same proof
+    used by the lookup endpoint."""
+
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request, pk):
-        reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
+        if request.user.is_authenticated:
+            reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
+        else:
+            code = str(request.data.get("reservation_code", "")).strip()
+            email = str(request.data.get("email", "")).strip()
+            if not code or not email:
+                return Response(
+                    {"detail": "Please provide your reservation code and email."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            reservation = Reservation.objects.filter(
+                pk=pk,
+                reservation_code__iexact=code,
+                guest_email__iexact=email,
+                user__isnull=True,
+            ).first()
+            if not reservation:
+                return Response(
+                    {"detail": "We couldn't find a reservation matching those details."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
         if reservation.status not in [Reservation.Status.PENDING, Reservation.Status.CONFIRMED]:
             return Response(
                 {"detail": "This reservation can no longer be cancelled."},
