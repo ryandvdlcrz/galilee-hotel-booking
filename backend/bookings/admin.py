@@ -485,16 +485,25 @@ class ReservationAdmin(admin.ModelAdmin):
         "stay_dates",
         "guests",
         "status_badge",
+        "payment_badge",
         "amount",
     )
     list_display_links = ("res_id", "guest_name")
-    list_filter = ("status", "room_type", "check_in_date")
+    list_filter = ("status", "payment_status", "room_type", "check_in_date")
     list_per_page = 10
     list_select_related = ("room_type",)
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
-    readonly_fields = ("reservation_code", "total_price", "created_at", "updated_at")
+    readonly_fields = (
+        "reservation_code",
+        "total_price",
+        "down_payment_amount",
+        "payment_proof_preview",
+        "created_at",
+        "updated_at",
+    )
     date_hierarchy = "check_in_date"
     filter_horizontal = ("rooms",)
+    actions = ["mark_payment_verified", "verify_and_confirm", "mark_payment_rejected"]
 
     STATUS_COLORS = {
         "pending": ("#92400e", "#fef3c7"),
@@ -502,6 +511,12 @@ class ReservationAdmin(admin.ModelAdmin):
         "checked_in": ("#1e3a8a", "#dbeafe"),
         "checked_out": ("#374151", "#e5e7eb"),
         "cancelled": ("#991b1b", "#fee2e2"),
+    }
+
+    PAYMENT_COLORS = {
+        "pending": ("#92400e", "#fef3c7"),
+        "verified": ("#166534", "#dcfce7"),
+        "rejected": ("#991b1b", "#fee2e2"),
     }
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -547,9 +562,54 @@ class ReservationAdmin(admin.ModelAdmin):
             fg, bg, obj.get_status_display(),
         )
 
+    @admin.display(description="Payment", ordering="payment_status")
+    def payment_badge(self, obj):
+        fg, bg = self.PAYMENT_COLORS.get(obj.payment_status, ("#374151", "#e5e7eb"))
+        return format_html(
+            '<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
+            'font-size:11px;font-weight:700;color:{};background:{};">{}</span>'
+            '<span class="gm-cell-sub">{}</span>',
+            fg, bg, obj.get_payment_status_display(), obj.get_payment_method_display(),
+        )
+
     @admin.display(description="Amount", ordering="total_price")
     def amount(self, obj):
         return f"₱{obj.total_price:,.2f}"
+
+    # ---- payment proof preview + bulk actions ----
+
+    @admin.display(description="Payment proof")
+    def payment_proof_preview(self, obj):
+        if not obj.payment_proof:
+            return "No proof uploaded"
+        return format_html(
+            '<a href="{0}" target="_blank"><img src="{0}" alt="Payment proof" '
+            'style="max-height:320px;border-radius:8px;border:1px solid #e5e7eb;"></a>',
+            obj.payment_proof.url,
+        )
+
+    @admin.action(description="Mark payment as verified")
+    def mark_payment_verified(self, request, queryset):
+        n = queryset.update(
+            payment_status=Reservation.PaymentStatus.VERIFIED, updated_at=timezone.now()
+        )
+        self.message_user(request, f"{n} payment(s) marked as verified.")
+
+    @admin.action(description="Verify payment and confirm reservation")
+    def verify_and_confirm(self, request, queryset):
+        n = queryset.filter(status=Reservation.Status.PENDING).update(
+            payment_status=Reservation.PaymentStatus.VERIFIED,
+            status=Reservation.Status.CONFIRMED,
+            updated_at=timezone.now(),
+        )
+        self.message_user(request, f"{n} reservation(s) verified and confirmed.")
+
+    @admin.action(description="Mark payment as rejected")
+    def mark_payment_rejected(self, request, queryset):
+        n = queryset.update(
+            payment_status=Reservation.PaymentStatus.REJECTED, updated_at=timezone.now()
+        )
+        self.message_user(request, f"{n} payment(s) marked as rejected.")
 
     # ---- stat cards on top of the list page (read-only queries) ----
 
@@ -589,6 +649,14 @@ class ReservationAdmin(admin.ModelAdmin):
         }),
         ("Pricing", {
             "fields": ("total_price",)
+        }),
+        ("Payment", {
+            "fields": (
+                ("payment_method", "payment_status"),
+                "down_payment_amount",
+                "payment_proof",
+                "payment_proof_preview",
+            )
         }),
         ("Timestamps", {
             "fields": ("created_at", "updated_at"),

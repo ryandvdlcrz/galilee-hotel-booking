@@ -100,14 +100,15 @@ class RoomTypeSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     """Used for creating a reservation and for showing it back to the user.
-    total_price, status, and reservation_code are set by the server, never
-    the client."""
+    total_price, status, down_payment_amount, payment_status, and
+    reservation_code are set by the server, never the client."""
 
     room_type_name = serializers.CharField(source="room_type.name", read_only=True)
     room_type_image = serializers.SerializerMethodField()
     base_room_cost = serializers.SerializerMethodField()
     extra_guest_count = serializers.SerializerMethodField()
     extra_guest_fee_total = serializers.SerializerMethodField()
+    balance_amount = serializers.SerializerMethodField()
     room_ids = serializers.PrimaryKeyRelatedField(
         queryset =Room.objects.all(), many=True, write_only=True, required=False,
         help_text = "IDs of the specific rooms the guest selected. Count must match num_rooms."
@@ -134,12 +135,20 @@ class ReservationSerializer(serializers.ModelSerializer):
             "base_room_cost",
             "extra_guest_count",
             "extra_guest_fee_total",
+            "payment_method",
+            "payment_status",
+            "down_payment_amount",
+            "balance_amount",
+            "payment_proof",
             "special_requests",
             "created_at",
             "room_ids",
             "rooms"
         ]
-        read_only_fields = ["reservation_code", "status", "total_price", "created_at"]
+        read_only_fields = [
+            "reservation_code", "status", "total_price", "created_at",
+            "payment_status", "down_payment_amount",
+        ]
         # Only needed if you add ph_mobile_validator to Reservation.guest_phone in models.py.
         # Harmless otherwise. validate_guest_phone() below does the format check.
         extra_kwargs = {"guest_phone": {"validators": []}}
@@ -152,6 +161,9 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def get_extra_guest_fee_total(self, obj):
         return obj.extra_guest_fee_total()
+
+    def get_balance_amount(self, obj):
+        return obj.balance_amount()
 
     def get_room_type_image(self, obj):
         images = list(obj.room_type.images.all())
@@ -167,7 +179,19 @@ class ReservationSerializer(serializers.ModelSerializer):
     def validate_guest_phone(self, value):
         return normalize_ph_mobile(value)
 
+    def validate_payment_proof(self, value):
+        if value and value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Receipt image must be 5MB or smaller.")
+        return value
+
     def validate(self, attrs):
+        # GCash needs a receipt screenshot; Cash / Counter does not.
+        payment_method = attrs.get("payment_method", Reservation.PaymentMethod.GCASH)
+        if payment_method == Reservation.PaymentMethod.GCASH and not attrs.get("payment_proof"):
+            raise serializers.ValidationError(
+                {"payment_proof": "Please upload your GCash receipt screenshot."}
+            )
+
         # Reuses the same validation logic defined on the model (date order +
         # availability), so the API and Django Admin never fall out of sync.
         room_ids = attrs.get("room_ids", [])

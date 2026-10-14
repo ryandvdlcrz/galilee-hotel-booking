@@ -6,7 +6,11 @@ import client from './client'
  * the client interceptor and the backend links the reservation to them.
  */
 export async function createReservation(payload) {
-  const { data } = await client.post('/reservations/', payload)
+  const config =
+    payload instanceof FormData
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : undefined
+  const { data } = await client.post('/reservations/', payload, config)
   return data
 }
 

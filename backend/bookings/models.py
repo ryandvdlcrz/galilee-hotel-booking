@@ -240,6 +240,18 @@ class Reservation(models.Model):
         CHECKED_OUT = "checked_out", "Checked Out"
         CANCELLED = "cancelled", "Cancelled"
 
+    class PaymentMethod(models.TextChoices):
+        GCASH = "gcash", "GCash Transfer"
+        CASH = "cash", "Cash In / Counter"
+
+    class PaymentStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        VERIFIED = "verified", "Verified"
+        REJECTED = "rejected", "Rejected"
+
+    # Share of the total price collected up front to hold the room.
+    DOWN_PAYMENT_RATE = Decimal("0.20")
+
     reservation_code = models.CharField(max_length=12, unique=True, editable=False)
 
     # Optional link to a registered account. Null = guest booking.
@@ -270,6 +282,18 @@ class Reservation(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
     special_requests = models.TextField(blank=True)
+
+    # 20% down payment details. The amount is calculated in save(), never sent by the client.
+    payment_method = models.CharField(
+        max_length=10, choices=PaymentMethod.choices, default=PaymentMethod.GCASH
+    )
+    payment_status = models.CharField(
+        max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING
+    )
+    down_payment_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, editable=False
+    )
+    payment_proof = models.ImageField(upload_to="payment_proofs/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -348,6 +372,14 @@ class Reservation(models.Model):
     def _calculate_total_price(self):
         return self.base_room_cost() + self.extra_guest_fee_total()
 
+    def _calculate_down_payment(self):
+        """20% of total_price. Resort fee is display-only and not part of total_price."""
+        return (self.total_price * self.DOWN_PAYMENT_RATE).quantize(Decimal("0.01"))
+
+    def balance_amount(self):
+        """What is left to pay at check-in."""
+        return (self.total_price - self.down_payment_amount).quantize(Decimal("0.01"))
+
     def save(self, *args, **kwargs):
         if not self.reservation_code:
             code = self._generate_code()
@@ -357,6 +389,7 @@ class Reservation(models.Model):
 
         if self.room_type_id and self.check_in_date and self.check_out_date:
             self.total_price = self._calculate_total_price()
+            self.down_payment_amount = self._calculate_down_payment()
 
         super().save(*args, **kwargs)
 
