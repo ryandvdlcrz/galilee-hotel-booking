@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Search, Calendar, Users, Clock } from 'lucide-react'
-import { lookupReservation } from '../api/reservations'
+import { lookupReservation, cancelReservation } from '../api/reservations'
+import CancelReservationModal from '../components/CancelReservationModal'
 import { formatDate, nightsBetween } from '../utils/formatDate'
 import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 
@@ -18,6 +19,9 @@ export default function FindReservationPage() {
   const [reservation, setReservation] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -33,6 +37,36 @@ export default function FindReservationPage() {
       )
     } finally {
       setLoading(false)
+    }
+  }
+
+  function openCancelConfirm() {
+    setCancelError('')
+    setConfirmOpen(true)
+  }
+
+  function closeCancelConfirm() {
+    if (cancelling) return
+    setConfirmOpen(false)
+    setCancelError('')
+  }
+
+  async function handleCancel() {
+    setCancelling(true)
+    setCancelError('')
+    try {
+      const updated = await cancelReservation(reservation.id, {
+        reservation_code: reservation.reservation_code,
+        email: email.trim(),
+      })
+      setReservation(updated)
+      setConfirmOpen(false)
+    } catch (err) {
+      setCancelError(
+        err.response?.data?.detail || 'Could not cancel this reservation. Please contact support.'
+      )
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -125,9 +159,28 @@ export default function FindReservationPage() {
                 ₱{Number(reservation.total_price).toLocaleString()}
               </span>
             </div>
+
+            {['pending', 'confirmed'].includes(reservation.status) && (
+              <button
+                type="button"
+                onClick={openCancelConfirm}
+                className="mt-5 w-full rounded-lg border border-red-300 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
+              >
+                Cancel Reservation
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      <CancelReservationModal
+        open={confirmOpen}
+        roomName={reservation?.room_type_name || ''}
+        cancelling={cancelling}
+        error={cancelError}
+        onConfirm={handleCancel}
+        onClose={closeCancelConfirm}
+      />
     </div>
   )
 }
