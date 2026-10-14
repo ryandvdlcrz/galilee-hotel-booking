@@ -36,6 +36,7 @@ export default function BookingConfirmationPage() {
   const room = state?.room
   const adults = state?.adults
   const children = state?.children
+  const guestEmail = state?.guestEmail
   const fromHistory = Boolean(state?.fromHistory)
 
   if (!reservation) {
@@ -141,7 +142,12 @@ export default function BookingConfirmationPage() {
     setCancelling(true)
     setCancelError('')
     try {
-      const updated = await cancelReservation(reservation.id)
+      // Guests (no account) prove ownership with the reservation code + email.
+      // Logged-in users are identified by their token, so the backend ignores these.
+      const updated = await cancelReservation(reservation.id, {
+        reservation_code: reservation.reservation_code,
+        email: reservation.guest_email || guestEmail,
+      })
       setReservation(updated)
       setConfirmOpen(false)
     } catch (err) {
