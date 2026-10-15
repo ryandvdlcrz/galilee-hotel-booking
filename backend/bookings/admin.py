@@ -476,8 +476,41 @@ def _room_occupancy(today, tomorrow):
     return total, occupied
 
 
+class ReservationAdminForm(forms.ModelForm):
+    """Caps amount_paid at the reservation's current balance in Django Admin."""
+
+    class Meta:
+        model = Reservation
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add min/max to the number input so the browser hints the valid range.
+        # The real enforcement is in clean_amount_paid() below.
+        self.fields["amount_paid"].widget.attrs.update({"min": "0", "step": "0.01"})
+        if self.instance and self.instance.pk:
+            self.fields["amount_paid"].widget.attrs["max"] = str(self.instance.balance_amount())
+
+    def clean_amount_paid(self):
+        amount_paid = self.cleaned_data.get("amount_paid") or 0
+
+        # For a brand-new reservation there is no saved balance yet, so there
+        # is nothing to cap against. Skip the check on create.
+        if not self.instance.pk:
+            return amount_paid
+
+        balance = self.instance.balance_amount()
+        if amount_paid > balance:
+            raise forms.ValidationError(
+                f"Amount paid cannot exceed the remaining balance of ₱{balance:,.2f}."
+            )
+        return amount_paid
+
+
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
+    form = ReservationAdminForm
+
     list_display = (
         "res_id",
         "guest_name",

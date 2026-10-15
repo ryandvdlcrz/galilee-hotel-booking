@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='reservation',
             name='amount_paid',
-            field=models.DecimalField(decimal_places=2, default=0, help_text='What the hotel has actually received. Filled in automatically when the payment is marked Verified. Staff can edit it, e.g. set it to the full total when a walk-in guest pays everything at the front desk.', max_digits=10),
+            field=models.DecimalField(decimal_places=2, default=0, help_text='Input Amount Paid', max_digits=10),
         ),
     ]
