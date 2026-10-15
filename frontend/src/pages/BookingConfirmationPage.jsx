@@ -48,6 +48,12 @@ export default function BookingConfirmationPage() {
   const state = location.state
   const { user } = useAuth()
 
+  // Single source of truth for "is this a real logged-in account?"
+  // Adjust `user?.id` if your user object uses a different unique field
+  // (e.g. user?.pk, user?.email, user?.username).
+  const isLoggedIn = Boolean(user?.id)
+  const manageBookingPath = isLoggedIn ? '/my-reservations' : '/find-reservation'
+
   const [reservation, setReservation] = useState(state?.reservation || null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -415,10 +421,10 @@ export default function BookingConfirmationPage() {
                 )}
 
                 <Link
-                  to={user ? '/my-reservations' : '/find-reservation'}
+                  to={manageBookingPath}
                   className="mt-3 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
                 >
-                  {user ? 'Manage My Booking' : 'Find My Booking'}
+                  {isLoggedIn ? 'Manage My Booking' : 'Find My Booking'}
                 </Link>
               </div>
             )}
@@ -449,7 +455,7 @@ export default function BookingConfirmationPage() {
         </div>
 
         <Link
-          to={fromHistory ? (user ? '/my-reservations' : '/find-reservation') : '/'}
+          to={fromHistory ? manageBookingPath : '/'}
           className="mt-8 inline-flex items-center gap-2 rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-semibold text-[#16264c] hover:bg-gray-200"
         >
           <ArrowLeft className="h-4 w-4" /> {fromHistory ? 'Back to My Bookings' : 'Back to Home'}
