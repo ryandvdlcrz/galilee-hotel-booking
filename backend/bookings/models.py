@@ -303,9 +303,7 @@ class Reservation(models.Model):
     )
     amount_paid = models.DecimalField(
         max_digits=10, decimal_places=2, default=0,
-        help_text="What the hotel has actually received. Filled in automatically when the payment "
-                  "is marked Verified. Staff can edit it, e.g. set it to the full total when a "
-                  "walk-in guest pays everything at the front desk.",
+        help_text="Input Amount Paid"
     )
     payment_proof = models.ImageField(upload_to="payment_proofs/", blank=True, null=True)
 
