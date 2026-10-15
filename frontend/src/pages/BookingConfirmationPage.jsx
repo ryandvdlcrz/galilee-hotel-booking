@@ -24,7 +24,7 @@ const RESORT_FEE_DISPLAY = 500
 
 const PAYMENT_METHOD_LABELS = {
   gcash: 'GCash E-Wallet',
-  cash: 'Cash In (Counter)',
+  cash: 'Cash',
 }
 
 const PAYMENT_OPTION_LABELS = {

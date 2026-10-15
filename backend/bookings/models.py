@@ -242,7 +242,7 @@ class Reservation(models.Model):
 
     class PaymentMethod(models.TextChoices):
         GCASH = "gcash", "GCash Transfer"
-        CASH = "cash", "Cash In / Counter"
+        CASH = "cash", "Cash"
 
     class PaymentStatus(models.TextChoices):
         PENDING = "pending", "Pending"

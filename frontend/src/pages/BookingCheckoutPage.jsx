@@ -517,7 +517,7 @@ export default function BookingCheckoutPage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-bold text-[#16264c]">Cash in / counter</p>
+                          <p className="text-sm font-bold text-[#16264c]">Cash</p>
                           {paymentMethod === 'cash' && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
                               <CheckCircle2 className="h-3 w-3" /> Selected
