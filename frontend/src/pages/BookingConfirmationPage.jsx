@@ -81,6 +81,7 @@ export default function BookingConfirmationPage() {
   // Payment details. Reservations made before payments existed have no
   // amount due recorded, so the payment block is hidden for those.
   const amountDueNow = Number(reservation.amount_due_now ?? 0)
+  const amountPaid = Number(reservation.amount_paid ?? 0)
   const balanceAtCheckIn = Number(reservation.balance_amount ?? 0)
   const hasPayment = amountDueNow > 0
   const paymentMethod = reservation.payment_method
@@ -326,7 +327,9 @@ export default function BookingConfirmationPage() {
                     </div>
                     <div className="flex justify-between gap-3 text-gray-600">
                       <span>{paymentVerified ? 'Amount paid' : 'Amount due now'}</span>
-                      <span className="font-semibold text-[#16264c]">{peso(amountDueNow)}</span>
+                      <span className="font-semibold text-[#16264c]">
+                        {peso(paymentVerified ? amountPaid : amountDueNow)}
+                      </span>
                     </div>
                     <div className="flex justify-between gap-3 text-gray-600">
                       <span>Balance at check-in</span>

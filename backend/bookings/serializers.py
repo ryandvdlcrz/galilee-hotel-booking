@@ -139,6 +139,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             "payment_option",
             "payment_status",
             "amount_due_now",
+            "amount_paid",
             "balance_amount",
             "payment_proof",
             "special_requests",
@@ -148,7 +149,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "reservation_code", "status", "total_price", "created_at",
-            "payment_status", "amount_due_now",
+            "payment_status", "amount_due_now", "amount_paid",
         ]
         # Only needed if you add ph_mobile_validator to Reservation.guest_phone in models.py.
         # Harmless otherwise. validate_guest_phone() below does the format check.

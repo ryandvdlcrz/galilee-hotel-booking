@@ -301,6 +301,12 @@ class Reservation(models.Model):
     amount_due_now = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, editable=False
     )
+    amount_paid = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text="What the hotel has actually received. Filled in automatically when the payment "
+                  "is marked Verified. Staff can edit it, e.g. set it to the full total when a "
+                  "walk-in guest pays everything at the front desk.",
+    )
     payment_proof = models.ImageField(upload_to="payment_proofs/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -388,8 +394,16 @@ class Reservation(models.Model):
         return (self.total_price * self.DOWN_PAYMENT_RATE).quantize(Decimal("0.01"))
 
     def balance_amount(self):
-        """What is left to pay at check-in."""
-        return (self.total_price - self.amount_due_now).quantize(Decimal("0.01"))
+        """What is left to pay at check-in.
+
+        Once the payment is Verified this is based on what the hotel actually
+        received (amount_paid). Before that it is based on what the guest
+        agreed to pay now (amount_due_now)."""
+        if self.payment_status == self.PaymentStatus.VERIFIED:
+            paid = self.amount_paid
+        else:
+            paid = self.amount_due_now
+        return max(self.total_price - paid, Decimal("0.00")).quantize(Decimal("0.01"))
 
     def save(self, *args, **kwargs):
         if not self.reservation_code:
@@ -401,6 +415,9 @@ class Reservation(models.Model):
         if self.room_type_id and self.check_in_date and self.check_out_date:
             self.total_price = self._calculate_total_price()
             self.amount_due_now = self._calculate_amount_due_now()
+            # Verified with nothing recorded yet: assume the guest paid what was due now.
+            if self.payment_status == self.PaymentStatus.VERIFIED and not self.amount_paid:
+                self.amount_paid = self.amount_due_now
 
         super().save(*args, **kwargs)
 

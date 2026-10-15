@@ -497,13 +497,19 @@ class ReservationAdmin(admin.ModelAdmin):
         "reservation_code",
         "total_price",
         "amount_due_now",
+        "balance_display",
         "payment_proof_preview",
         "created_at",
         "updated_at",
     )
     date_hierarchy = "check_in_date"
     filter_horizontal = ("rooms",)
-    actions = ["mark_payment_verified", "verify_and_confirm", "mark_payment_rejected"]
+    actions = [
+        "mark_payment_verified",
+        "verify_and_confirm",
+        "mark_fully_paid",
+        "mark_payment_rejected",
+    ]
 
     STATUS_COLORS = {
         "pending": ("#92400e", "#fef3c7"),
@@ -598,21 +604,43 @@ class ReservationAdmin(admin.ModelAdmin):
             obj.payment_proof.url,
         )
 
-    @admin.action(description="Mark payment as verified")
+    @admin.display(description="Balance at check-in")
+    def balance_display(self, obj):
+        if not obj.pk:
+            return "-"
+        return f"₱{obj.balance_amount():,.2f}"
+
+    # The actions below call save() on purpose (not queryset.update) so the
+    # model fills in amount_paid and the balance stays correct.
+
+    @admin.action(description="Mark payment as verified (amount paid = amount due now)")
     def mark_payment_verified(self, request, queryset):
-        n = queryset.update(
-            payment_status=Reservation.PaymentStatus.VERIFIED, updated_at=timezone.now()
-        )
+        n = 0
+        for res in queryset:
+            res.payment_status = Reservation.PaymentStatus.VERIFIED
+            res.save()
+            n += 1
         self.message_user(request, f"{n} payment(s) marked as verified.")
 
     @admin.action(description="Verify payment and confirm reservation")
     def verify_and_confirm(self, request, queryset):
-        n = queryset.filter(status=Reservation.Status.PENDING).update(
-            payment_status=Reservation.PaymentStatus.VERIFIED,
-            status=Reservation.Status.CONFIRMED,
-            updated_at=timezone.now(),
-        )
+        n = 0
+        for res in queryset.filter(status=Reservation.Status.PENDING):
+            res.payment_status = Reservation.PaymentStatus.VERIFIED
+            res.status = Reservation.Status.CONFIRMED
+            res.save()
+            n += 1
         self.message_user(request, f"{n} reservation(s) verified and confirmed.")
+
+    @admin.action(description="Mark as fully paid (balance becomes 0)")
+    def mark_fully_paid(self, request, queryset):
+        n = 0
+        for res in queryset:
+            res.amount_paid = res.total_price
+            res.payment_status = Reservation.PaymentStatus.VERIFIED
+            res.save()
+            n += 1
+        self.message_user(request, f"{n} reservation(s) marked as fully paid.")
 
     @admin.action(description="Mark payment as rejected")
     def mark_payment_rejected(self, request, queryset):
@@ -664,6 +692,7 @@ class ReservationAdmin(admin.ModelAdmin):
             "fields": (
                 ("payment_method", "payment_option"),
                 ("payment_status", "amount_due_now"),
+                ("amount_paid", "balance_display"),
                 "payment_proof",
                 "payment_proof_preview",
             )
