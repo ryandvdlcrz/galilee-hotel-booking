@@ -13,6 +13,7 @@ import {
   Check,
 } from 'lucide-react'
 import { cancelReservation } from '../api/reservations'
+import { useAuth } from '../hooks/useAuth'
 import { formatDate, nightsBetween } from '../utils/formatDate'
 import { CHECK_IN_TIME, CHECK_OUT_TIME } from '../utils/hotelPolicy'
 import { getBadge } from '../utils/reservationBadge'
@@ -45,6 +46,7 @@ export default function BookingConfirmationPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const state = location.state
+  const { user } = useAuth()
 
   const [reservation, setReservation] = useState(state?.reservation || null)
   const [cancelling, setCancelling] = useState(false)
@@ -413,10 +415,10 @@ export default function BookingConfirmationPage() {
                 )}
 
                 <Link
-                  to="/my-reservations"
+                  to={user ? '/my-reservations' : '/find-reservation'}
                   className="mt-3 block rounded-lg bg-white/10 py-2.5 text-center text-sm font-semibold hover:bg-white/20"
                 >
-                  Manage My Booking
+                  {user ? 'Manage My Booking' : 'Find My Booking'}
                 </Link>
               </div>
             )}
@@ -447,7 +449,7 @@ export default function BookingConfirmationPage() {
         </div>
 
         <Link
-          to={fromHistory ? '/my-reservations' : '/'}
+          to={fromHistory ? (user ? '/my-reservations' : '/find-reservation') : '/'}
           className="mt-8 inline-flex items-center gap-2 rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-semibold text-[#16264c] hover:bg-gray-200"
         >
           <ArrowLeft className="h-4 w-4" /> {fromHistory ? 'Back to My Bookings' : 'Back to Home'}
