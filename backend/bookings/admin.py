@@ -489,14 +489,14 @@ class ReservationAdmin(admin.ModelAdmin):
         "amount",
     )
     list_display_links = ("res_id", "guest_name")
-    list_filter = ("status", "payment_status", "room_type", "check_in_date")
+    list_filter = ("status", "payment_status", "payment_option", "room_type", "check_in_date")
     list_per_page = 10
     list_select_related = ("room_type",)
     search_fields = ("reservation_code", "guest_name", "guest_email", "guest_phone")
     readonly_fields = (
         "reservation_code",
         "total_price",
-        "down_payment_amount",
+        "amount_due_now",
         "payment_proof_preview",
         "created_at",
         "updated_at",
@@ -662,8 +662,8 @@ class ReservationAdmin(admin.ModelAdmin):
         }),
         ("Payment", {
             "fields": (
-                ("payment_method", "payment_status"),
-                "down_payment_amount",
+                ("payment_method", "payment_option"),
+                ("payment_status", "amount_due_now"),
                 "payment_proof",
                 "payment_proof_preview",
             )

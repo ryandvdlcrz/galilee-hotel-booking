@@ -100,7 +100,7 @@ class RoomTypeSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     """Used for creating a reservation and for showing it back to the user.
-    total_price, status, down_payment_amount, payment_status, and
+    total_price, status, amount_due_now, payment_status, and
     reservation_code are set by the server, never the client."""
 
     room_type_name = serializers.CharField(source="room_type.name", read_only=True)
@@ -136,8 +136,9 @@ class ReservationSerializer(serializers.ModelSerializer):
             "extra_guest_count",
             "extra_guest_fee_total",
             "payment_method",
+            "payment_option",
             "payment_status",
-            "down_payment_amount",
+            "amount_due_now",
             "balance_amount",
             "payment_proof",
             "special_requests",
@@ -147,7 +148,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "reservation_code", "status", "total_price", "created_at",
-            "payment_status", "down_payment_amount",
+            "payment_status", "amount_due_now",
         ]
         # Only needed if you add ph_mobile_validator to Reservation.guest_phone in models.py.
         # Harmless otherwise. validate_guest_phone() below does the format check.

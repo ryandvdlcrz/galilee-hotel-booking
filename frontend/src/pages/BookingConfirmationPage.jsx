@@ -22,6 +22,25 @@ import CancelReservationModal from '../components/CancelReservationModal'
 // yet part of the backend's actual stored total_price. See BookingCheckoutPage.
 const RESORT_FEE_DISPLAY = 500
 
+const PAYMENT_METHOD_LABELS = {
+  gcash: 'GCash E-Wallet',
+  cash: 'Cash In (Counter)',
+}
+
+const PAYMENT_OPTION_LABELS = {
+  down_payment: '20% Down Payment',
+  full: 'Full Payment',
+}
+
+const PAYMENT_STATUS_BADGES = {
+  pending: { label: 'Pending verification', className: 'bg-amber-100 text-amber-700' },
+  verified: { label: 'Verified', className: 'bg-green-100 text-green-700' },
+  rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
+}
+
+const peso = (n) =>
+  `₱${Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+
 export default function BookingConfirmationPage() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -36,7 +55,6 @@ export default function BookingConfirmationPage() {
   const room = state?.room
   const adults = state?.adults
   const children = state?.children
-  const guestEmail = state?.guestEmail
   const fromHistory = Boolean(state?.fromHistory)
 
   if (!reservation) {
@@ -59,6 +77,17 @@ export default function BookingConfirmationPage() {
   const primaryImage = room?.images?.find((img) => img.is_primary) ?? room?.images?.[0]
   const code = reservation.reservation_code
   const roomName = reservation.room_type_name || room?.name || ''
+
+  // Payment details. Reservations made before payments existed have no
+  // amount due recorded, so the payment block is hidden for those.
+  const amountDueNow = Number(reservation.amount_due_now ?? 0)
+  const balanceAtCheckIn = Number(reservation.balance_amount ?? 0)
+  const hasPayment = amountDueNow > 0
+  const paymentMethod = reservation.payment_method
+  const paymentStatus = reservation.payment_status || 'pending'
+  const paymentBadge = PAYMENT_STATUS_BADGES[paymentStatus] ?? PAYMENT_STATUS_BADGES.pending
+  const paymentVerified = paymentStatus === 'verified'
+  const paymentRejected = paymentStatus === 'rejected'
 
   // Heading changes with the situation: cancelled, opened from history, or just booked.
   // For a new booking the wording follows the status staff set in Django Admin.
@@ -84,7 +113,9 @@ export default function BookingConfirmationPage() {
         wrap: 'bg-amber-50',
         color: 'text-amber-600',
         title: 'Reservation Received!',
-        text: 'Thank you for choosing Galilee Wonderland. Your booking is now waiting for confirmation from our team.',
+        text: hasPayment
+          ? 'Thank you for choosing Galilee Wonderland. Your booking is waiting for our team to verify your payment.'
+          : 'Thank you for choosing Galilee Wonderland. Your booking is now waiting for confirmation from our team.',
       }
     : {
         Icon: CheckCircle2,
@@ -95,17 +126,41 @@ export default function BookingConfirmationPage() {
       }
   const HeaderIcon = header.Icon
 
+  // Pending steps depend on how the guest chose to pay. Without a payment
+  // record (older bookings) the original wording is kept.
+  const pendingSteps = !hasPayment
+    ? [
+        `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
+        'Our team will review your booking and update its status. Check back anytime to see if it has been confirmed.',
+        'Need it sooner? Call our concierge using the number below.',
+      ]
+    : paymentRejected
+    ? [
+        `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
+        'We could not verify your payment. Please call our concierge so we can sort it out.',
+        'Your room is not confirmed until the payment is verified.',
+      ]
+    : paymentMethod === 'cash'
+    ? [
+        `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
+        `Pay ${peso(amountDueNow)} at the front desk or an over-the-counter branch and show your booking reference.`,
+        'Our team will confirm your booking once the payment is received.',
+      ]
+    : [
+        `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
+        `We received your GCash receipt for ${peso(amountDueNow)}. Our team will verify it and confirm your booking.`,
+        'Need it sooner? Call our concierge using the number below.',
+      ]
+
   // "What's Next?" steps depend on the booking status (no email system, so
   // everything points to things the guest can do on the site or by phone).
   const nextStepsByStatus = {
-    pending: [
-      `Save your booking reference (#${code}). You will need it, along with your email, to find this booking later.`,
-      'Our team will review your booking and update its status. Check back anytime to see if it has been confirmed.',
-      'Need it sooner? Call our concierge using the number below.',
-    ],
+    pending: pendingSteps,
     confirmed: [
       `Show your booking reference (#${code}) at the front desk when you arrive.`,
-      `Check-in starts at ${CHECK_IN_TIME} and check-out is by ${CHECK_OUT_TIME}.`,
+      balanceAtCheckIn > 0
+        ? `Check-in starts at ${CHECK_IN_TIME} and check-out is by ${CHECK_OUT_TIME}. The remaining balance of ${peso(balanceAtCheckIn)} is paid at check-in.`
+        : `Check-in starts at ${CHECK_IN_TIME} and check-out is by ${CHECK_OUT_TIME}.`,
       'Need to make a change? Call our concierge using the number below.',
     ],
     checked_in: [
@@ -142,12 +197,7 @@ export default function BookingConfirmationPage() {
     setCancelling(true)
     setCancelError('')
     try {
-      // Guests (no account) prove ownership with the reservation code + email.
-      // Logged-in users are identified by their token, so the backend ignores these.
-      const updated = await cancelReservation(reservation.id, {
-        reservation_code: reservation.reservation_code,
-        email: reservation.guest_email || guestEmail,
-      })
+      const updated = await cancelReservation(reservation.id)
       setReservation(updated)
       setConfirmOpen(false)
     } catch (err) {
@@ -256,6 +306,48 @@ export default function BookingConfirmationPage() {
                     </span>
                   </div>
                 </div>
+
+                {hasPayment && (
+                  <div className="mt-4 space-y-1.5 border-t border-gray-100 pt-4 text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Payment Details
+                    </p>
+                    <div className="flex justify-between gap-3 text-gray-600">
+                      <span>Mode of payment</span>
+                      <span className="text-right font-semibold text-[#16264c]">
+                        {PAYMENT_METHOD_LABELS[paymentMethod] ?? paymentMethod}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-3 text-gray-600">
+                      <span>Payment option</span>
+                      <span className="text-right font-semibold text-[#16264c]">
+                        {PAYMENT_OPTION_LABELS[reservation.payment_option] ?? PAYMENT_OPTION_LABELS.down_payment}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-3 text-gray-600">
+                      <span>{paymentVerified ? 'Amount paid' : 'Amount due now'}</span>
+                      <span className="font-semibold text-[#16264c]">{peso(amountDueNow)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3 text-gray-600">
+                      <span>Balance at check-in</span>
+                      <span className="font-semibold text-[#16264c]">{peso(balanceAtCheckIn)}</span>
+                    </div>
+                    {paymentMethod === 'gcash' && (
+                      <div className="flex justify-between gap-3 text-gray-600">
+                        <span>Receipt</span>
+                        <span className="font-semibold text-[#16264c]">
+                          {reservation.payment_proof ? 'Uploaded' : 'Not uploaded'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-3 pt-1 text-gray-600">
+                      <span>Payment status</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${paymentBadge.className}`}>
+                        {paymentBadge.label}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {canCancel ? (
                   <button
