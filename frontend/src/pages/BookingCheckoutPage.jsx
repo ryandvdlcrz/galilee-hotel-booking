@@ -53,6 +53,7 @@ export default function BookingCheckoutPage() {
   const [specialRequests, setSpecialRequests] = useState('')
 
   const [paymentMethod, setPaymentMethod] = useState('gcash') // 'gcash' | 'cash'
+  const [paymentOption, setPaymentOption] = useState('down_payment') // 'down_payment' | 'full'
   const [proofFile, setProofFile] = useState(null)
   const [proofPreview, setProofPreview] = useState('')
   const [dragging, setDragging] = useState(false)
@@ -104,10 +105,14 @@ export default function BookingCheckoutPage() {
   const displayTotal = subtotal + extraGuestFee + RESORT_FEE_DISPLAY
 
   // The amount the backend actually charges (resort fee is NOT included),
-  // and the 20% down payment worked out from it.
+  // the 20% down payment worked out from it, and what is due right now
+  // depending on whether the guest pays the down payment or in full.
   const chargedTotal = subtotal + extraGuestFee
   const downPayment = computeDownPayment(chargedTotal)
-  const balanceAtCheckIn = chargedTotal - downPayment
+  const isFullPayment = paymentOption === 'full'
+  const amountDue = isFullPayment ? chargedTotal : downPayment
+  const balanceAtCheckIn = chargedTotal - amountDue
+  const dueLabel = isFullPayment ? 'Full payment' : `${DOWN_PAYMENT_PERCENT}% down payment`
 
   // ---- step 1 -> step 2 ----
   function handleNext(e) {
@@ -190,6 +195,7 @@ export default function BookingCheckoutPage() {
       formData.append('special_requests', specialRequests)
       bookingDetails.roomIds.forEach((id) => formData.append('room_ids', id))
       formData.append('payment_method', paymentMethod)
+      formData.append('payment_option', paymentOption)
       if (paymentMethod === 'gcash' && proofFile) {
         formData.append('payment_proof', proofFile)
       }
@@ -357,20 +363,19 @@ export default function BookingCheckoutPage() {
 
           {step === 2 && (
             <div className="space-y-6">
-              {/* Down payment notice + breakdown */}
+              {/* Payment notice + breakdown */}
               <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#a6842f] text-white">
                     <ShieldCheck className="h-5 w-5" />
                   </span>
                   <div>
-                    <h2 className="text-base font-bold text-[#16264c]">
-                      {DOWN_PAYMENT_PERCENT}% down payment required
-                    </h2>
+                    <h2 className="text-base font-bold text-[#16264c]">Secure your room</h2>
                     <p className="mt-1 text-sm text-gray-600">
-                      To protect both guests and Galilee Mansion from fake reservations, a{' '}
+                      To protect both guests and Galilee Mansion from fake reservations, a payment is
+                      required to hold your room. Pay the{' '}
                       <span className="font-semibold text-[#16264c]">{DOWN_PAYMENT_PERCENT}% down payment</span>{' '}
-                      is required to hold your room. The rest is paid at check-in.
+                      now and the rest at check-in, or pay in full.
                     </p>
                   </div>
                 </div>
@@ -381,15 +386,61 @@ export default function BookingCheckoutPage() {
                     <p className="mt-1 text-lg font-bold text-[#16264c]">{peso(chargedTotal)}</p>
                   </div>
                   <div className="rounded-lg border border-[#a6842f] bg-amber-100/70 p-3 text-center">
-                    <p className="text-xs font-semibold text-[#16264c]">
-                      {DOWN_PAYMENT_PERCENT}% down payment (due now)
-                    </p>
-                    <p className="mt-1 text-lg font-bold text-[#16264c]">{peso(downPayment)}</p>
+                    <p className="text-xs font-semibold text-[#16264c]">{dueLabel} (due now)</p>
+                    <p className="mt-1 text-lg font-bold text-[#16264c]">{peso(amountDue)}</p>
                   </div>
                   <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
                     <p className="text-xs text-gray-500">Balance at check-in</p>
                     <p className="mt-1 text-lg font-bold text-[#16264c]">{peso(balanceAtCheckIn)}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Payment amount: down payment or full */}
+              <div className="rounded-xl bg-white p-5 shadow-sm sm:p-6">
+                <h2 className="text-base font-bold text-[#16264c]">Payment amount</h2>
+                <p className="text-xs text-gray-500">Choose how much to pay now</p>
+
+                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2" role="radiogroup" aria-label="Payment amount">
+                  {[
+                    {
+                      value: 'down_payment',
+                      title: `${DOWN_PAYMENT_PERCENT}% down payment`,
+                      amount: downPayment,
+                      note: `Pay the remaining ${peso(chargedTotal - downPayment)} at check-in`,
+                    },
+                    {
+                      value: 'full',
+                      title: 'Full payment',
+                      amount: chargedTotal,
+                      note: 'Nothing left to pay at check-in',
+                    },
+                  ].map((opt) => {
+                    const selected = paymentOption === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setPaymentOption(opt.value)}
+                        className={`rounded-xl border-2 p-4 text-left transition-colors ${
+                          selected ? 'border-[#16264c] bg-blue-50/40' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-bold text-[#16264c]">{opt.title}</p>
+                          {selected && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                              <CheckCircle2 className="h-3 w-3" /> Selected
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-lg font-bold text-[#a6842f]">{peso(opt.amount)}</p>
+                        <p className="mt-1 text-xs text-gray-600">{opt.note}</p>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -403,7 +454,7 @@ export default function BookingCheckoutPage() {
                     <div>
                       <h2 className="text-base font-bold text-[#16264c]">Mode of payment</h2>
                       <p className="text-xs text-gray-500">
-                        Choose how you will pay the {DOWN_PAYMENT_PERCENT}% down payment ({peso(downPayment)})
+                        Choose how you will pay {peso(amountDue)} ({dueLabel.toLowerCase()})
                       </p>
                     </div>
                   </div>
@@ -439,7 +490,7 @@ export default function BookingCheckoutPage() {
                           )}
                         </div>
                         <p className="mt-0.5 text-xs text-gray-600">
-                          Pay {DOWN_PAYMENT_PERCENT}% ({peso(downPayment)}) and upload your receipt
+                          Pay {peso(amountDue)} and upload your receipt
                         </p>
                       </div>
                     </div>
@@ -474,7 +525,7 @@ export default function BookingCheckoutPage() {
                           )}
                         </div>
                         <p className="mt-0.5 text-xs text-gray-600">
-                          Pay {DOWN_PAYMENT_PERCENT}% ({peso(downPayment)}) at the front desk
+                          Pay {peso(amountDue)} at the front desk
                         </p>
                       </div>
                     </div>
@@ -500,7 +551,7 @@ export default function BookingCheckoutPage() {
                         <p className="mt-0.5 text-xs text-gray-600">
                           GCash no: <span className="font-bold text-[#16264c]">{GCASH_ACCOUNT.number}</span>
                           <span className="mx-1.5 text-gray-300">|</span>
-                          Amount: <span className="font-bold text-blue-700">{peso(downPayment)}</span>
+                          Amount: <span className="font-bold text-blue-700">{peso(amountDue)}</span>
                         </p>
                       </div>
                     </div>
@@ -574,7 +625,7 @@ export default function BookingCheckoutPage() {
                           Click to upload or drag and drop your receipt
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
-                          Proof of your {peso(downPayment)} transfer. Image files up to 5MB.
+                          Proof of your {peso(amountDue)} transfer. Image files up to 5MB.
                         </p>
                       </div>
                     )}
@@ -593,7 +644,7 @@ export default function BookingCheckoutPage() {
                   <p className="font-semibold text-[#16264c]">Pay at the front desk</p>
                   <p className="mt-1">
                     Your reservation will be saved as pending. Bring your booking reference to the front desk
-                    or an over-the-counter branch and pay {peso(downPayment)}. Our team will confirm the
+                    or an over-the-counter branch and pay {peso(amountDue)}. Our team will confirm the
                     reservation once the payment is received.
                   </p>
                 </div>
@@ -619,7 +670,7 @@ export default function BookingCheckoutPage() {
                   {submitting
                     ? 'Submitting…'
                     : paymentMethod === 'gcash'
-                    ? 'Submit down payment & receipt'
+                    ? 'Submit payment & receipt'
                     : 'Confirm reservation'}
                   {!submitting && <ArrowRight className="h-4 w-4" />}
                 </button>
@@ -691,8 +742,8 @@ export default function BookingCheckoutPage() {
 
                   {step === 2 && (
                     <div className="mt-2 flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-[#16264c]">
-                      <span>Due now ({DOWN_PAYMENT_PERCENT}%)</span>
-                      <span>{peso(downPayment)}</span>
+                      <span>Due now ({isFullPayment ? 'full' : `${DOWN_PAYMENT_PERCENT}%`})</span>
+                      <span>{peso(amountDue)}</span>
                     </div>
                   )}
                 </div>
